@@ -1,0 +1,127 @@
+{
+  "_doc": "Single source of truth for pipeline rules. Every limit carries its source. Values marked CALIBRATE are placeholders that only record, never reject, until calibrated on real batches.",
+  "paths": {
+    "base": "F:\\2. Microstock\\2. Setelah Edit\\1. Gambar\\1. Dari Claude",
+    "downloads": "C:\\Users\\Nathan\\Downloads",
+    "upload_queue": "F:\\2. Microstock\\2. Setelah Edit\\1. Gambar\\1. Dari Claude\\_UPLOAD_QUEUE",
+    "winscp_log": "F:\\2. Microstock\\2. Setelah Edit\\1. Gambar\\1. Dari Claude\\_logs\\winscp.log",
+    "state_dir": "F:\\2. Microstock\\2. Setelah Edit\\1. Gambar\\1. Dari Claude\\_state"
+  },
+  "naming": {
+    "_source": "Nathan, 2026-10-25: own counter in 1. Dari Claude, Flow project C-Day N, filenames without spaces",
+    "batch_folder": "Day {n}",
+    "flow_project": "C-Day {n}",
+    "asset_filename": "C{n}_{k:02d}.jpg",
+    "first_new_day": 182,
+    "legacy_days": [
+      181
+    ]
+  },
+  "composition": {
+    "_source": "Nathan, 2026-10-25: composition stays the same as the existing routine",
+    "total": 20,
+    "illustration": {
+      "count": 8,
+      "aspect": "1:1"
+    },
+    "photo": {
+      "count": 12,
+      "aspect": "16:9"
+    },
+    "beauty_max": 2
+  },
+  "flow": {
+    "model": "Nano Banana Pro",
+    "outputs_per_prompt": 1,
+    "download_option": "2K Upscaled",
+    "max_credit_cost": 0
+  },
+  "qc": {
+    "min_pixels": 4000000,
+    "_min_pixels_source": "Adobe Stock minimum 4 MP for photos/illustrations (existing routine rule; re-verify against Adobe help)",
+    "aspect_tolerance": 0.02,
+    "sharpness_tile": 256,
+    "sharpness_percentile": 90,
+    "sharpness_min": {
+      "photo": null,
+      "illustration": null,
+      "_status": "CALIBRATE"
+    },
+    "near_dup_hamming_max": 10,
+    "_near_dup_source": "Common dHash convention; CALIBRATE on real batches",
+    "white_bg_border_px": 16,
+    "white_bg_min_mean": 245,
+    "white_bg_max_std": 6
+  },
+  "metadata": {
+    "adobe": {
+      "title_max_chars": 64,
+      "_title_source": "Adobe CSV doc: title max 70 chars, no commas (helpx.adobe.com/stock/contributor/manage-your-portfolio/csv-requirements-content.html). IPTC IIM 2:05 ObjectName is limited to 64 bytes by spec. 64 satisfies both without truncation.",
+      "title_forbid_chars": ",",
+      "keywords_min": 45,
+      "keywords_max": 49,
+      "_keywords_source": "Adobe titles-and-keyword guide: up to 49; min 45 is Nathan's existing rule",
+      "filename_max_chars": 30,
+      "categories": {
+        "1": "Animals",
+        "2": "Buildings and Architecture",
+        "3": "Business",
+        "4": "Drinks",
+        "5": "The Environment",
+        "6": "States of Mind",
+        "7": "Food",
+        "8": "Graphic Resources",
+        "9": "Hobbies and Leisure",
+        "10": "Industry",
+        "11": "Landscapes",
+        "12": "Lifestyle",
+        "13": "People",
+        "14": "Plants and Flowers",
+        "15": "Culture and Religion",
+        "16": "Science",
+        "17": "Social Issues",
+        "18": "Sports",
+        "19": "Technology",
+        "20": "Transport",
+        "21": "Travel"
+      },
+      "csv_columns": [
+        "Filename",
+        "Title",
+        "Keywords",
+        "Category",
+        "Releases"
+      ]
+    },
+    "vecteezy": {
+      "csv_columns": [
+        "Filename",
+        "Title",
+        "Description",
+        "Keywords"
+      ],
+      "_columns_source": "vecteezy.com/blog/contributor/contributors-use-a-csv-to-upload-metadata-faster: first four columns must be Filename, Title, Description, Keywords",
+      "keywords_max": 30,
+      "filename_warn_spaces": true,
+      "_keywords_source": "vecteezy.com/blog/contributor/contributor-checklist: maximum of 30 keywords, at least 10 recommended",
+      "_unverified": "Third-party (photokeyworder) claims, not yet confirmed on Vecteezy's own pages: SFTP upload with credentials from Content Manager, mandatory 'AI-Generated?' checkbox + tool dropdown in Add Data, 1 MB minimum file size, title max 200 chars."
+    },
+    "banned_terms": [
+      "ai",
+      "a.i.",
+      "generative",
+      "generated",
+      "generative ai",
+      "stock",
+      "vertical",
+      "horizontal",
+      "midjourney",
+      "stable diffusion",
+      "nano banana",
+      "imagefx",
+      "4k",
+      "8k"
+    ],
+    "_banned_source": "ai/generative/generated/stock/vertical/horizontal: existing routine. Tool names and resolution tags: Adobe generative-AI guide (no 'generative AI', no platform-specific parameters)."
+  }
+}

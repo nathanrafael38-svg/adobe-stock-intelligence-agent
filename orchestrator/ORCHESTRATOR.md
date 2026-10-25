@@ -15,7 +15,9 @@ The run phase is given by the scheduled task: `PHASE=produce` or
 - Paths: `config/pipeline.json` → `paths`. PC folders that must be connected:
   `F:\2. Microstock` and `C:\Users\Nathan\Downloads`.
 - SFTP upload is NOT yours: WinSCP (`_tools\adobe_upload.bat`, Task Scheduler
-  09:30) uploads everything in `_UPLOAD_QUEUE` and deletes it on success.
+  09:30; reference copy in `tools/`) promotes `_UPLOAD_QUEUE\_incoming` when
+  READY.flag exists, uploads the queue root and deletes each file on success.
+  `_logs\upload_runs.log` records every run (promoted / nothing / exit code).
   Credentials live only in WinSCP's saved site. Never read or touch them.
 - Local mirror: `/home/claude/work/<batch>/` (= `BASE\Day N`).
 
@@ -51,10 +53,16 @@ The run phase is given by the scheduled task: `PHASE=produce` or
 5. Dispatch **metadata-writer** with the `qc_passed` files. `msp.cli meta`
    with `--queue-dir /home/claude/work/<batch>/queue`. If `problems`, send
    them back to metadata-writer once, then rerun `meta`.
-6a. Queue guard: if local time is between 09:15 and 09:45, wait until 09:46
-   (WinSCP may be reading the queue). Then commit every file in the local
-   queue dir to `BASE\_UPLOAD_QUEUE\` and both CSVs to `Day N\Metadata\`.
-   Read the queue dir back with device_list_dir and compare sizes.
+6a. Commit every file in the local queue dir to `BASE\_UPLOAD_QUEUE\_incoming\`
+   and both CSVs to `Day N\Metadata\`. Read `_incoming` back with
+   device_list_dir and compare names and sizes with the local queue dir.
+   Only when all match, commit `_incoming\READY.flag` (content: batch id,
+   file count, time) in a SEPARATE commit call. Never write `.jpg` files to
+   the queue root: `tools/adobe_upload.bat` promotes `_incoming` to the root
+   only after it sees READY.flag, so a half-written batch is never uploaded.
+   If `_incoming\READY.flag` from an earlier batch still exists, report it
+   (the previous upload has not run) and still write this batch; the next
+   upload run promotes both.
 7. Report: Day N, KIRIM/TAHAN/BUANG counts, queued files with titles, failures
    with reasons, and "Upload SFTP 09:30; persiapan portal jalan otomatis
    setelahnya."

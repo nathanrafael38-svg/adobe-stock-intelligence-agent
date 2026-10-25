@@ -27,6 +27,20 @@ platform_accepted. Side exits: failed, qc_hold, qc_reject, platform_rejected.
 Batch folder `1. Dari Claude\Day N` (own counter, first new = 182), Flow
 project `C-Day N`, files `C{N}_{kk}.jpg` (no spaces, unique vs manual Days).
 
+## Where it runs
+- Execution: a Claude cloud session that reaches the PC through the desktop
+  app bridge. The PC must be on, online, Claude desktop app open, built-in
+  browser signed in to Google Flow and Adobe Stock contributor.
+- PC-only by necessity: Flow/Adobe sign-ins (built-in browser), image files
+  on `F:`, WinSCP with the SFTP credentials.
+- Phone: control surface only. Start a run, read reports, receive push
+  notifications, reply `submit C<N>`. The phone does not execute stages.
+
+## Upload handshake
+Orchestrator writes `_UPLOAD_QUEUE\_incoming\*.jpg`, verifies, then writes
+`_incoming\READY.flag`. `tools/adobe_upload.bat` (copy to `_tools\`) moves
+`_incoming` into the queue root only when the flag exists, then runs WinSCP.
+
 ## Tests
 `python -m pytest -q tests` — unit tests plus a simulated batch. Tests marked
 real need the Day 181 sample staged (path in `D181`).

@@ -110,7 +110,12 @@ def cmd_qc(a, cfg):
     known = Q.known_hashes_from_states(C.local_state_dir(), exclude_batch=b.data["batch_id"])
     results = []
     for asset in _ks(b, a.k):
-        if asset["status"] != "downloaded" or asset.get("qc_tech_sha") == asset.get("sha256"):
+        if a.recheck and asset["status"] == "upscale_pending":
+            # QC rule changed: re-evaluate the same original before spending an upscale
+            last = next(h for h in reversed(asset["history"]) if h["status"] == "downloaded")["evidence"]
+            b.transition(asset["k"], "downloaded", {**last, "recheck": "qc rule change, same file"})
+            asset.pop("qc_tech_sha", None)
+        if asset["status"] != "downloaded" or (asset.get("qc_tech_sha") == asset.get("sha256") and not a.recheck):
             continue
         path = C.local_day(cfg, a.n) / "_original" / asset["filename"]
         own = [(r, h) for r, h in known if not r.endswith(asset["filename"])]
@@ -314,7 +319,7 @@ def main(argv=None):
     add("generated", cmd_generated, N, K1, (["--project"], {"required": True}), (["--tile"], {"default": ""}),
         (["--prompt-match"], {"choices": ["exact", "differs"], "required": True}), (["--by"], {"default": "nathan"}))
     add("ingest", cmd_ingest, N, K1, (["--src"], {"required": True}), (["--source-name"], {"default": None}))
-    add("qc", cmd_qc, N, KS)
+    add("qc", cmd_qc, N, KS, (["--recheck"], {"action": "store_true"}))
     add("review", cmd_review, N, K1, (["--verdict"], {"choices": ["KIRIM", "TOLAK", "REVIEW"], "required": True}),
         (["--note"], {"required": True}), (["--checked"], {"nargs": "*"}), (["--flags-resolved"], {"action": "store_true"}))
     add("metadata", cmd_metadata, N, (["--file"], {"required": True}))

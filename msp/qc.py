@@ -33,15 +33,25 @@ def hamming(a: str, b: str) -> int:
     return bin(int(a, 16) ^ int(b, 16)).count("1")
 
 
-def sharpness(img: Image.Image, long_edge: int = 1024) -> float:
-    """Variance of a 4-neighbour Laplacian on a downscaled greyscale copy."""
+def sharpness(img: Image.Image, long_edge: int = 1024, grid: int = 16, top: float = 0.05) -> float:
+    """Subject sharpness: mean Laplacian variance of the most detailed 5% of tiles.
+
+    A global variance punishes images with large empty areas (flat vector art,
+    minimal interiors) although their subject is crisp. Calibrated on C183:
+    sharp images 286-9456; a 2 px Gaussian blur drops a photo to ~150 and flat art to ~25.
+    """
     g = img.convert("L")
     s = long_edge / max(g.size)
     if s < 1:
         g = g.resize((round(g.width * s), round(g.height * s)), Image.LANCZOS)
     a = np.asarray(g, dtype=np.float32)
     lap = a[1:-1, :-2] + a[1:-1, 2:] + a[:-2, 1:-1] + a[2:, 1:-1] - 4 * a[1:-1, 1:-1]
-    return round(float(lap.var()), 1)
+    h, w = lap.shape
+    th, tw = h // grid, w // grid
+    v = sorted((float(lap[i * th:(i + 1) * th, j * tw:(j + 1) * tw].var()) for i in range(grid) for j in range(grid)),
+               reverse=True)
+    n = max(1, int(len(v) * top))
+    return round(sum(v[:n]) / n, 1)
 
 
 def border_stats(img: Image.Image, frac: float = 0.03) -> tuple[float, float]:

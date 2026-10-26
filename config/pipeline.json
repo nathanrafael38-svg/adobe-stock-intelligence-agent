@@ -30,7 +30,7 @@
   "qc": {
     "min_pixels": 4000000,
     "aspect_tolerance": 0.01,
-    "sharpness_min": 100.0,
+    "sharpness_min": 200.0,
     "illustration_border_mean_min": 240.0,
     "illustration_border_std_max": 10.0,
     "near_duplicate_hamming": 6,

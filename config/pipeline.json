@@ -1,0 +1,70 @@
+{
+  "_comment": "Single source of truth for paths, batch composition and thresholds. No secrets here.",
+  "device": {
+    "base": "F:\\2. Microstock\\2. Setelah Edit\\1. Gambar\\1. Dari Claude",
+    "state_dir": "_state",
+    "logs_dir": "_logs",
+    "tools_dir": "_tools",
+    "upload_queue": "_UPLOAD_QUEUE",
+    "upload_incoming": "_UPLOAD_QUEUE\\_incoming",
+    "upscale_in": "_UPSCALE\\in",
+    "upscale_out": "_UPSCALE\\out",
+    "day_dir_pattern": "Day {n}",
+    "downloads_dir": "%USERPROFILE%\\Downloads"
+  },
+  "flow": {
+    "account_hint": "microstock Google account (see skill flow-download)",
+    "project_pattern": "C-Day {n}",
+    "model": "Nano Banana Pro",
+    "outputs_per_prompt": 1,
+    "download_resolution": "2K"
+  },
+  "naming": {
+    "batch_id": "C{n}",
+    "file": "C{n}_{k:02d}.jpg"
+  },
+  "composition": [
+    {"type": "illustration", "aspect": "1:1", "count": 8},
+    {"type": "photo", "aspect": "16:9", "count": 12}
+  ],
+  "qc": {
+    "min_pixels": 4000000,
+    "aspect_tolerance": 0.01,
+    "sharpness_min": 100.0,
+    "illustration_border_mean_min": 240.0,
+    "illustration_border_std_max": 10.0,
+    "near_duplicate_hamming": 6,
+    "upscale_eligible_errors": ["below_min_pixels", "low_sharpness"],
+    "upscale_factor": 2
+  },
+  "adobe": {
+    "title_max_chars": 70,
+    "title_forbidden_chars": ",;\"",
+    "filename_max_chars": 30,
+    "keywords_min": 15,
+    "keywords_max": 49,
+    "categories": {
+      "1": "Animals", "2": "Buildings and Architecture", "3": "Business", "4": "Drinks",
+      "5": "The Environment", "6": "States of Mind", "7": "Food", "8": "Graphic Resources",
+      "9": "Hobbies and Leisure", "10": "Industry", "11": "Landscape", "12": "Lifestyle",
+      "13": "People", "14": "Plants and Flowers", "15": "Culture and Religion", "16": "Science",
+      "17": "Social Issues", "18": "Sports", "19": "Technology", "20": "Transport", "21": "Travel"
+    },
+    "csv_columns": ["Filename", "Title", "Keywords", "Category", "Releases"]
+  },
+  "vecteezy": {
+    "keywords_min": 5,
+    "keywords_max": 30,
+    "csv_columns": ["Filename", "Title", "Description", "Keywords"]
+  },
+  "metadata": {
+    "keyword_max_bytes": 64,
+    "banned_terms": ["ai generated", "midjourney", "dall-e", "stable diffusion", "nano banana", "google flow", "imagefx", "4k", "8k", "hd", "photorealistic render"]
+  },
+  "schedule": {
+    "timezone": "Asia/Jakarta",
+    "prompts_local": "20:13",
+    "process_local": "07:43",
+    "upload_task_name": "TO CONFIRM via diag_tasks.csv"
+  }
+}

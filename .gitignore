@@ -1,0 +1,7 @@
+__pycache__/
+.pytest_cache/
+*.log
+winscp*.log
+adobe_upload.txt
+*.ini
+msp-work/

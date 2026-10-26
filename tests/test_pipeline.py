@@ -165,3 +165,13 @@ def test_winscp_log_counts_duplicate_upload():
     assert len(runs) == 3
     assert [r["exit_code"] for r in runs] == [None, 1, 1]
     assert winscp_log.upload_counts(runs) == {"Day 181(1).jpg": 2}
+
+
+def test_state_reset_requires_side_state_and_reason():
+    s = state.new_batch("b", 1, plan())
+    with pytest.raises(state.StateError):
+        state.reset(s, 1, "prompt_generated", {"reason": "x"})
+    state.advance(s, 1, "failed", {"error": "flow blocked"})
+    state.reset(s, 1, "prompt_generated", {"reason": "manual retry by Nathan"})
+    assert s["assets"]["1"]["status"] == "prompt_generated"
+    state.advance(s, 1, "image_generated", {"tile": "t"})

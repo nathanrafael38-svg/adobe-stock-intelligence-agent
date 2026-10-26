@@ -78,6 +78,17 @@ def advance(state: dict, k: int | str, status: str, evidence: dict) -> bool:
     return True
 
 
+def reset(state: dict, k: int | str, to: str, evidence: dict) -> None:
+    """Explicitly return a side-state asset (failed/qc_hold) to an active status."""
+    a = state["assets"][str(k)]
+    if a["status"] not in SIDE:
+        raise StateError(f"asset {k} is {a['status']}, not in a side state")
+    if to not in RANK or not evidence:
+        raise StateError("reset needs a valid target status and evidence")
+    a["status"] = to
+    a["history"].append({"status": to, "at": now(), "evidence": {"reset": True, **evidence}})
+
+
 def at_least(asset: dict, status: str) -> bool:
     return asset["status"] in RANK and RANK[asset["status"]] >= RANK[status]
 

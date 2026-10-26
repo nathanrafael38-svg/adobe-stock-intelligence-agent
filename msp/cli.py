@@ -220,6 +220,13 @@ def cmd_portal(a):
     out({"status": a.status, "moved": moved})
 
 
+def cmd_reset(a):
+    s = state.load(a.state)
+    state.reset(s, a.k, a.to, {"reason": a.reason})
+    state.save(s, a.state)
+    out({"k": a.k, "status": a.to})
+
+
 def cmd_report(a):
     s = state.load(a.state)
     rows = []
@@ -242,6 +249,7 @@ def main(argv=None):
     c = sp.add_parser("meta"); c.add_argument("--state", required=True); c.add_argument("--meta", required=True); c.add_argument("--day-dir", required=True); c.add_argument("--queue-dir", required=True); c.add_argument("--meta-dir", required=True)
     c = sp.add_parser("sftp"); c.add_argument("--state", required=True); c.add_argument("--log", required=True)
     c = sp.add_parser("portal"); c.add_argument("--state", required=True); c.add_argument("--status", required=True, choices=["portal_configured", "submit_approved", "submitted"]); c.add_argument("--evidence", required=True); c.add_argument("--all", action="store_true")
+    c = sp.add_parser("reset"); c.add_argument("--state", required=True); c.add_argument("--k", type=int, required=True); c.add_argument("--to", default="prompt_generated"); c.add_argument("--reason", required=True)
     c = sp.add_parser("report"); c.add_argument("--state", required=True)
     a = p.parse_args(argv)
     globals()["cmd_" + a.cmd.replace("-", "_")](a)

@@ -20,7 +20,9 @@ An automated research and analytics workflow for an Adobe Stock contributor busi
 
 ## Current status
 
-Initial project setup. Production workflows are not yet verified.
+Daily production pipeline (C-Day N batches) rebuilt in `msp/` with agents and skills in
+`.claude/`. See `docs/ARCHITECTURE.md` and `docs/RUNBOOK.md`. Unit/E2E tests pass on
+synthetic data and one real image; live Flow/portal/scheduler runs still to be verified.
 
 ## Operating principles
 

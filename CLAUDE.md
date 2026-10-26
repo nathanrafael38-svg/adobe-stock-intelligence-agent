@@ -32,7 +32,7 @@ Prompt generation, metadata writing, CSV, embedding, queueing and **submission**
 by you with skills + CLI — they need no separate agent. Run `python -m msp doctor` at the
 start of every run (daily-run step 3); never do an agent's job yourself if it is missing.
 
-## Daily run (scheduled: prompts 20:13, process 07:43 Asia/Jakarta)
+## Daily run (scheduled hourly 06:17–23:17 Asia/Jakarta; `msp due` decides the work)
 Follow skill `daily-run` exactly. Short form:
 1. Evening (prompts run): `microstock-prompts` → `msp init` → commit plan, state, PROMPTS sheet.
 2. Morning (process run): stage state → `browser-operator` (mode=download) → `msp ingest`

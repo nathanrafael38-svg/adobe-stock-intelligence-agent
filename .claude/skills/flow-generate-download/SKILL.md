@@ -32,6 +32,19 @@ description: Generate exactly one image per prompt in Google Flow and download i
 > - The Claude desktop app showed a download confirmation dialog that Nathan
 >   approved. The agent cannot approve it. Until it is set to allow
 >   automatically, a download waits for Nathan.
+> - DOWNLOAD VIA CLAUDE IN CHROME (verified 2026-10-26 15:27): Nathan's
+>   Chrome with "Ask where to save" OFF saves 2K straight to Downloads, no
+>   dialog. In Chrome the microstock account is the 2nd signed-in account:
+>   project URL is `https://flow.google.com/u/1/project/<id>`; if Flow shows
+>   "Project not found", the wrong account is active -> use Google's account
+>   chooser and pick nathanrafael512 (never type a password; if a password is
+>   requested, stop and ask Nathan). Chrome's wider viewport shows a direct
+>   "Download media" button in the editor toolbar -> 1K / 2K Upscaled / 4K.
+>   Use the built-in browser only as fallback (it opens a Save As dialog per
+>   file that only Nathan can click).
+> - Model defaults differ per browser: Chrome showed "Nano Banana 2.1" while
+>   the built-in browser showed "Nano Banana Pro". Record the model from asset
+>   info when available; Nathan must check the chip when generating.
 > - Generation stays manual (Nathan). This skill now covers DOWNLOAD ONLY.
 > Steps marked [VERIFY] below are still unverified.
 

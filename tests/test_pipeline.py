@@ -196,3 +196,47 @@ def test_doctor_components_present(capsys):
         assert out["agents"][n]["ok"], out["agents"][n]
     for n in cli.REQUIRED_SKILLS:
         assert out["skills"][n]["ok"], out["skills"][n]
+
+
+def _st(bid, day, created, statuses, log=None):
+    return {"batch_id": bid, "day": day, "created_at": created, "run_log": log or [],
+            "assets": {str(i): {"k": i, "status": s} for i, s in enumerate(statuses, 1)}}
+
+
+def test_due_silent_when_nothing_to_do():
+    from datetime import datetime
+    from msp.cli import due
+    st = [_st("C183", 183, "2026-10-26T11:00:00+00:00", ["submitted", "qc_reject"])]
+    r = due(st, datetime.fromisoformat("2026-10-27T10:17+07:00"))
+    assert r["silent"] and r["actions"] == []
+
+
+def test_due_prompts_only_in_evening_once_per_day():
+    from datetime import datetime
+    from msp.cli import due
+    st = [_st("C183", 183, "2026-10-26T11:00:00+00:00", ["submitted"])]
+    assert {"do": "prompts"} in due(st, datetime.fromisoformat("2026-10-27T19:17+07:00"))["actions"]
+    assert {"do": "prompts"} not in due(st, datetime.fromisoformat("2026-10-27T10:17+07:00"))["actions"]
+    st.append(_st("C184", 184, "2026-10-27T12:13:00+00:00", ["prompt_generated"] * 20))
+    r = due(st, datetime.fromisoformat("2026-10-27T21:17+07:00"))
+    assert {"do": "prompts"} not in r["actions"] and {"do": "check_flow", "batch": "C184"} in r["actions"]
+
+
+def test_due_checkpoint_quiet_period_and_process():
+    from datetime import datetime
+    from msp.cli import due
+    log = [{"event": "submit_checkpoint", "at": "2026-10-27T01:00:00+00:00"}]
+    st = [_st("C184", 184, "2026-10-26T13:13:00+00:00", ["fields_configured", "queued"], log)]
+    r = due(st, datetime.fromisoformat("2026-10-27T10:17+07:00"))
+    assert {"do": "process", "batch": "C184"} in r["actions"]
+    assert {"do": "ask_submit", "batch": "C184"} not in r["actions"]
+    r = due(st, datetime.fromisoformat("2026-10-27T22:17+07:00"))
+    assert {"do": "ask_submit", "batch": "C184"} in r["actions"]
+
+
+def test_due_stale_batch_skipped_and_new_prompts():
+    from datetime import datetime
+    from msp.cli import due
+    st = [_st("C184", 184, "2026-10-24T13:13:00+00:00", ["prompt_generated"] * 3)]
+    r = due(st, datetime.fromisoformat("2026-10-27T19:17+07:00"))
+    assert r["skip_stale"] == [{"batch": "C184", "ks": [1, 2, 3]}] and {"do": "prompts"} in r["actions"]

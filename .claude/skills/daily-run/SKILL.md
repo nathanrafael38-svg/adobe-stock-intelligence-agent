@@ -4,10 +4,26 @@ description: Orchestrator runbook for the C-Day N microstock pipeline - stage or
 ---
 # Daily run (orchestrator)
 
-Verified end-to-end on C183 (2026-10-26). Two entry points, same state machine:
-- **prompts run** (20:13 Asia/Jakarta daily): Stage 1 only.
-- **process run** (07:43 daily; Nathan generates in Flow before 07:13): Stages 3 → 6b-prepare,
-  then the submit checkpoint. Re-running it at any time resumes where state says.
+Verified end-to-end on C183 (2026-10-26). One state machine, run **hourly** (06–23 WIB) by
+the scheduled task "Microstock hourly run", so work starts within an hour of the PC
+being on. Each run decides its own work:
+
+## Hourly mode (do this right after "0. Start")
+1. `python -m msp due --now "<PC local time ISO, +07:00>"` on the staged states.
+2. `silent: true` → release the lock (`state=done`) and **end without any message**.
+3. `skip_stale` → `msp mark --n N --k ... --status skipped --evidence '{"reason":"not generated within 2 days"}'`.
+4. Execute the actions in order:
+   - `process` → "Process run" for that batch from the first step its assets need.
+   - `check_flow` → open Flow project `C-Day N`; if tiles exist, "Process run" step A
+     onward; if none yet, do nothing and stay silent (Nathan has not generated).
+   - `ask_submit` → step J for that batch, then `msp checkpoint --n N` (no re-ask for 12 h).
+   - `prompts` → "Prompts run" (only offered from 18:00, once per day, when the newest
+     batch is no longer waiting for generation).
+5. Message Nathan only when something changed or needs him (prompts ready, QC summary,
+   "Submit this batch?", CAPTCHA, a failure). Never send "nothing to do" messages.
+
+Entry points kept for manual use: **prompts run** (Stage 1) and **process run**
+(Stages 3 → 6b-prepare, then the submit checkpoint). Re-running resumes where state says.
 
 ## Standing decisions from Nathan
 - **QC is yours.** No REVIEW is sent to Nathan: you make the final call on every
@@ -58,7 +74,7 @@ For the open batch, only act on assets whose status needs the step:
 | G queue | you | `msp enqueue` → commit to `_UPLOAD_QUEUE\_incoming\` → list `_incoming` to JSON → `msp enqueue --confirm listing.json --local-ts "<PC local now>"` → commit READY.flag **last** | READY.flag, state |
 | H upload | Windows task "Adobe Stock SFTP Upload" runs every 15 min (after `setup_tasks.bat`) | poll `_UPLOAD_QUEUE` until empty (≤30 min); stage `_logs\winscp.log`; `msp reconcile --log`; never run WinSCP yourself | state |
 | I prepare | `browser-operator` mode=prepare for `sftp_uploaded` | per file confirmed: `msp mark --status fields_configured --evidence '{"category":..,"ai_label":true,"fictional":..,"title_seen":..}'` | state |
-| J checkpoint | you | SendUserMessage + push: table of files, titles, categories, labels, rejects → **"Submit this batch? (ya / tidak)"** | — |
+| J checkpoint | you | SendUserMessage + push: table of files, titles, categories, labels, rejects → **"Submit this batch? (ya / tidak)"**, then `msp checkpoint --n N` | — |
 | K submit | **you (orchestrator), never a subagent**, only after Nathan's explicit "ya" in chat | `msp approve --text "<his words>"` → follow `adobe-portal-submit` submit section yourself: reload New tab, untick "Include in submission" on every non-batch file until the button shows exactly the batch count, verify each ticked name, Submit → ask Nathan before ticking the Terms attestation → Continue → CAPTCHA: stop and ask Nathan → verify the In review tab → `msp mark --status submitted --evidence '{"portal_evidence":"..."}'` | state |
 
 Any answer other than an explicit yes → no submission; leave `fields_configured`.

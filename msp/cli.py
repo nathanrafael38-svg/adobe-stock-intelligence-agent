@@ -313,6 +313,68 @@ def cmd_approve(a, cfg):
     _out({"approved": ks})
 
 
+# ---------------- hourly scheduling ----------------
+PROCESS_STATUSES = {"downloaded", "upscale_pending", "qc_review", "qc_passed", "metadata_validated",
+                    "metadata_embedded", "queued", "sftp_uploaded", "submit_approved"}
+CHECKPOINT_QUIET_HOURS = 12
+PROMPTS_FROM_HOUR = 18
+STALE_BATCH_DAYS = 2
+
+
+def due(states: list[dict], now_local, tz_offset_hours: int = 7) -> dict:
+    """Decide what an hourly run must do. Pure function of batch states and local time.
+
+    Returns {"actions": [...], "skip_stale": [{batch, ks}], "silent": bool}.
+    actions: ("process", batch) | ("check_flow", batch) | ("ask_submit", batch) | ("prompts",)
+    """
+    from datetime import datetime, timedelta, timezone
+    tz = timezone(timedelta(hours=tz_offset_hours))
+    now = now_local if now_local.tzinfo else now_local.replace(tzinfo=tz)
+    actions, stale = [], []
+    for d in sorted(states, key=lambda d: d["day"]):
+        st = [a["status"] for a in d["assets"].values()]
+        bid = d["batch_id"]
+        created = datetime.fromisoformat(d["created_at"]).astimezone(tz)
+        if any(x in PROCESS_STATUSES for x in st):
+            actions.append({"do": "process", "batch": bid})
+        if "fields_configured" in st:
+            asked = [e for e in d.get("run_log", []) if e.get("event") == "submit_checkpoint"]
+            last = max((datetime.fromisoformat(e["at"]) for e in asked), default=None)
+            if last is None or now - last.astimezone(tz) > timedelta(hours=CHECKPOINT_QUIET_HOURS):
+                actions.append({"do": "ask_submit", "batch": bid})
+        if "prompt_generated" in st:
+            if now - created > timedelta(days=STALE_BATCH_DAYS):
+                stale.append({"batch": bid, "ks": [a["k"] for a in d["assets"].values() if a["status"] == "prompt_generated"]})
+            else:
+                actions.append({"do": "check_flow", "batch": bid})
+    newest = max(states, key=lambda d: d["day"]) if states else None
+    newest_open = newest and any(a["status"] == "prompt_generated" for a in newest["assets"].values()) \
+        and not any(s["batch"] == newest["batch_id"] for s in stale)
+    created_today = newest and datetime.fromisoformat(newest["created_at"]).astimezone(tz).date() == now.date()
+    if now.hour >= PROMPTS_FROM_HOUR and not created_today and not newest_open:
+        actions.append({"do": "prompts"})
+    return {"actions": actions, "skip_stale": stale, "silent": not actions and not stale}
+
+
+def cmd_due(a, cfg):
+    from datetime import datetime
+    states = []
+    for p in sorted(C.local_state_dir().glob("C*.json")):
+        if p.name.endswith("-plan.json"):
+            continue
+        states.append(json.loads(p.read_text(encoding="utf-8")))
+    now = datetime.fromisoformat(a.now) if a.now else datetime.now()
+    _out(due(states, now))
+
+
+def cmd_checkpoint(a, cfg):
+    """Record that "Submit this batch?" was sent, so hourly runs do not ask again for 12 h."""
+    b = _batch(cfg, a.n)
+    ks = [x["k"] for x in b.in_status("fields_configured")]
+    b.log("submit_checkpoint", assets=ks)
+    _out({"logged": ks})
+
+
 # ---------------- component check ----------------
 REQUIRED_AGENTS = ["visual-qc", "browser-operator"]
 REQUIRED_SKILLS = ["daily-run", "microstock-prompts", "flow-download", "qc-rubric", "stock-metadata",
@@ -422,6 +484,8 @@ def main(argv=None):
         (["--status"], {"required": True}), (["--evidence"], {"default": None}))
     add("approve", cmd_approve, N, (["--text"], {"required": True}), (["--by"], {"default": "nathan"}))
     add("doctor", cmd_doctor)
+    add("due", cmd_due, (["--now"], {"default": None, "help": "local time ISO, e.g. 2026-10-27T19:17+07:00"}))
+    add("checkpoint", cmd_checkpoint, N)
     add("status", cmd_status, N)
     add("qc-report", cmd_qc_report, N)
     a = ap.parse_args(argv)

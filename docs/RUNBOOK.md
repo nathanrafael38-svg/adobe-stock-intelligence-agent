@@ -3,18 +3,20 @@
 ## Daily rhythm (Asia/Jakarta)
 | time | what | who |
 |---|---|---|
-| 20:13 | prompts run → `PROMPTS_C{N}.txt` + Flow project name | Claude scheduled task |
-| evening / before 07:13 | generate x1 per prompt in Flow project `C-Day N` | Nathan |
-| 07:43 | process run: download → QC → metadata → queue | Claude scheduled task |
-| every 15 min | `adobe_upload.bat` uploads queue | Windows task |
-| after upload | portal prepare → "Submit this batch?" push message | Claude |
-| when convenient | reply **ya** in that conversation → submit | Nathan |
+| 20:13 | prompts run → `PROMPTS_C{N}.txt` + Flow project name (push) | Claude scheduled task "Microstock prompts run" |
+| before 07:13 | generate x1 per prompt in Flow project `C-Day N` (microstock account) | Nathan |
+| 07:43 | process run: 2K download (Edge) → QC → metadata → verify → queue → wait for upload → portal prepare → "Submit this batch?" (push) | Claude scheduled task "Microstock process run" |
+| every 15 min | `adobe_upload.bat` uploads the queue | Windows task (after `setup_tasks.bat`) |
+| every 15 min | `upscale_watch.bat` (only does work when files are queued) | Windows task "Microstock Upscale Watch" |
+| when convenient | reply **ya** in that conversation; solve the Adobe CAPTCHA in Edge if it appears | Nathan |
 
-**One click:** open the scheduled task "Microstock process run" in Claude → *Run now*.
+**One click:** open the scheduled task "Microstock process run" (or "prompts run") in Claude → *Run now*.
 It resumes from state, so running it twice is safe.
 
-Requirements for unattended runs: PC on and awake, logged in, Claude desktop app open
-(the built-in browser and file bridge run through it), Adobe/Flow sessions signed in.
+Requirements for unattended runs: PC on and awake (sleep is off on AC), Windows logged in,
+Claude desktop app open (file bridge), Edge open with the Claude extension connected and
+signed in to Flow (microstock account) and Adobe Stock contributor; Edge downloads go to
+`Downloads\Buat Claude`.
 
 ## Manual commands (in a Claude session with the repo)
 ```

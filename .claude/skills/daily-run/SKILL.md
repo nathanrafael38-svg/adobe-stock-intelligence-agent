@@ -4,10 +4,21 @@ description: Orchestrator runbook for the C-Day N microstock pipeline - stage or
 ---
 # Daily run (orchestrator)
 
-Two entry points, same state machine:
-- **prompts run** (evening): Stage 1 only.
-- **process run** (morning, after Nathan generated in Flow): Stages 3 → 6b-prepare,
+Verified end-to-end on C183 (2026-10-26). Two entry points, same state machine:
+- **prompts run** (20:13 Asia/Jakarta daily): Stage 1 only.
+- **process run** (07:43 daily; Nathan generates in Flow before 07:13): Stages 3 → 6b-prepare,
   then the submit checkpoint. Re-running it at any time resumes where state says.
+
+## Standing decisions from Nathan
+- **QC is yours.** No REVIEW is sent to Nathan: you make the final call on every
+  `qc_review` asset after looking at 100% crops yourself. In doubt about AI artifacts,
+  duplicated objects, brand-like product design or anatomy → TOLAK. Watercolor paper
+  texture or intentional spatter on a near-white (≥250) background → KIRIM.
+- Only QC-passed images get metadata and are uploaded.
+- Browser: Nathan's Edge via the Claude extension (`mcp__claude-in-chrome__*`); downloads
+  land in `C:\Users\Nathan\Downloads\Buat Claude`.
+- Adobe CAPTCHA: Nathan solves it. Stop, message him, then verify the In review tab.
+- Submission and Adobe's Terms attestation: follow `adobe-portal-submit` (ask Nathan).
 
 Device base = `config.device.base`. Workspace = `$MSP_WORKSPACE`.
 
@@ -29,14 +40,14 @@ For the open batch, only act on assets whose status needs the step:
 
 | step | who | command / action | commit to device |
 |---|---|---|---|
-| A download | `browser-operator` mode=download for `prompt_generated` assets | per success: `msp generated` then `msp ingest --src <staged>` | `_original\C{N}_kk.jpg`, state |
+| A download | `browser-operator` mode=download (Edge, microstock account, in-page 2K loop, files in `Buat Claude`, match by exact prompt hash) | per success: `msp generated` then `msp ingest --src <staged>`; missing tiles stay `prompt_generated` and go in the summary | `_original\C{N}_kk.jpg`, state |
 | B tech QC | you | `msp qc --n N` | state |
 | C upscale | you | for `upscale_pending`: commit the original to `_UPSCALE\in\`; the PC task `upscale_watch.bat` writes `_UPSCALE\out\C{N}_kk.jpg`; poll up to 20 min; stage it; `msp ingest` (re-ingest) then `msp qc` again (one upscale per asset max) | state |
-| D visual QC | `visual-qc` agent with downloaded+non-FAIL assets | `msp review` per result | state |
+| D visual QC | two `visual-qc` agents in parallel (10 images each) for downloaded+non-FAIL assets | `msp review` per result, then decide every `qc_review` yourself (standing decisions) | state |
 | E metadata | you, skill `stock-metadata` | `msp metadata`, `msp embed`, `msp csv` | finals `Day N\C{N}_kk.jpg`, `Day N\Metadata\*.csv` |
 | F verify finals | you | stage `Day N\C{N}_kk.jpg` back from the PC → `msp verify-device --dir <staged Day N>` (the bridge rewrites the C2PA segment on write, so bytes change; pixels + IPTC/XMP must match; device size/sha become canonical) | state |
 | G queue | you | `msp enqueue` → commit to `_UPLOAD_QUEUE\_incoming\` → list `_incoming` to JSON → `msp enqueue --confirm listing.json --local-ts "<PC local now>"` → commit READY.flag **last** | READY.flag, state |
-| H upload | Windows task runs `adobe_upload.bat` (schedule in RUNBOOK) | wait/poll `_UPLOAD_QUEUE` empty; stage `_logs\winscp.log`; `msp reconcile --log` | state |
+| H upload | Windows task "Adobe Stock SFTP Upload" runs every 15 min (after `setup_tasks.bat`) | poll `_UPLOAD_QUEUE` until empty (≤30 min); stage `_logs\winscp.log`; `msp reconcile --log`; never run WinSCP yourself | state |
 | I prepare | `browser-operator` mode=prepare for `sftp_uploaded` | per file confirmed: `msp mark --status fields_configured --evidence '{"category":..,"ai_label":true,"fictional":..,"title_seen":..}'` | state |
 | J checkpoint | you | SendUserMessage + push: table of files, titles, categories, labels, rejects → **"Submit this batch? (ya / tidak)"** | — |
 | K submit | only after Nathan's explicit "ya" in chat | `msp approve --text "<his words>"` → `browser-operator` mode=submit with `APPROVAL: C{N} approved by Nathan` → `msp mark --status submitted --evidence '{"portal_evidence":"<confirmation text>"}'` | state |

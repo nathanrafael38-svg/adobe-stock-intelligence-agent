@@ -15,7 +15,11 @@ paths, quotas or platform rules: they live in `config/pipeline.json` and the ski
   password stays on the PC; you only hand files to the queue.
 - **Submission needs Nathan's explicit "ya" to "Submit this batch?"** in chat, once per
   batch. Download confirmations are auto-approved (Nathan's standing instruction).
-- CAPTCHA / 2FA / login walls: stop that stage, tell Nathan, continue other stages.
+- **QC decisions are yours** (Nathan delegated them); only QC-passed images get metadata
+  and upload. Be conservative on AI artifacts, brand-like designs and anatomy.
+- CAPTCHA (Adobe) is solved by Nathan: stop, message him, verify afterwards.
+  Login walls: stop that stage, tell Nathan, continue other stages.
+- Browser = Nathan's Edge through the Claude extension (`mcp__claude-in-chrome__*`).
 - Stage 2 is hybrid: Nathan generates in Flow. You never click Generate.
 
 ## Agents (spawn with the Agent tool; pass only the inputs listed)
@@ -27,7 +31,7 @@ paths, quotas or platform rules: they live in `config/pipeline.json` and the ski
 Prompt generation, metadata writing, CSV, embedding and queueing are done by you
 with skills + CLI — they need no separate agent.
 
-## Daily run
+## Daily run (scheduled: prompts 20:13, process 07:43 Asia/Jakarta)
 Follow skill `daily-run` exactly. Short form:
 1. Evening (prompts run): `microstock-prompts` → `msp init` → commit plan, state, PROMPTS sheet.
 2. Morning (process run): stage state → `browser-operator` (mode=download) → `msp ingest`

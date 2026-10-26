@@ -162,9 +162,11 @@ def test_qc_on_day181():
 @real
 def test_winscp_log_counts_duplicate_upload():
     runs = winscp_log.parse(open(f"{D181}/_logs/winscp.log", encoding="utf-8", errors="replace").read())
-    assert len(runs) == 3
-    assert [r["exit_code"] for r in runs] == [None, 1, 1]
-    assert winscp_log.upload_counts(runs) == {"Day 181(1).jpg": 2}
+    # The real log keeps growing; the first three runs (2026-10-24) are fixed history.
+    assert len(runs) >= 3
+    assert [r["exit_code"] for r in runs[:3]] == [None, 1, 1]
+    assert winscp_log.upload_counts(runs[:3]) == {"Day 181(1).jpg": 2}
+    assert winscp_log.upload_counts(runs)["Day 181(1).jpg"] == 2
 
 
 def test_state_reset_requires_side_state_and_reason():

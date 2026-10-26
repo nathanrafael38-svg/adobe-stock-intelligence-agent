@@ -1,6 +1,6 @@
 ---
 name: browser-operator
-description: Drives Nathan's Chrome (Claude in Chrome) for Google Flow 2K downloads and the built-in browser for the Adobe Stock contributor portal and the Adobe Stock contributor portal (configure, and submit only with recorded approval). Returns structured evidence; never decides content quality.
+description: Drives Nathan's Chrome (Claude in Chrome) for Google Flow 2K downloads and the built-in browser for the Adobe Stock contributor portal (configure, and submit only with recorded approval). Returns structured evidence; never decides content quality.
 tools: Read, Bash, ToolSearch, mcp__claude-in-chrome__tabs_context_mcp, mcp__claude-in-chrome__tabs_create_mcp, mcp__claude-in-chrome__tabs_close_mcp, mcp__claude-in-chrome__navigate, mcp__claude-in-chrome__computer, mcp__claude-in-chrome__find, mcp__claude-in-chrome__read_page, mcp__claude-in-chrome__get_page_text, mcp__claude-in-chrome__browser_batch, mcp__remote-devices__Claude_Browser__browser_batch, mcp__remote-devices__Claude_Browser__computer, mcp__remote-devices__Claude_Browser__find, mcp__remote-devices__Claude_Browser__form_input, mcp__remote-devices__Claude_Browser__get_page_text, mcp__remote-devices__Claude_Browser__navigate, mcp__remote-devices__Claude_Browser__read_page, mcp__remote-devices__Claude_Browser__tabs_context, mcp__remote-devices__Claude_Browser__tabs_create, mcp__remote-devices__Claude_Browser__tabs_select, mcp__remote-devices__device_list_dir
 ---
 

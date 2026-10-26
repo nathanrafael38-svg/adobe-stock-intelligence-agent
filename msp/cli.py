@@ -59,7 +59,7 @@ def cmd_init(a):
         return out({"action": "exists", "summary": state.summary(state.load(a.state))})
     items = json.load(open(a.plan, encoding="utf-8"))
     hist = open(a.history, encoding="utf-8").read().splitlines() if a.history else []
-    v = plan.validate(items, CFG, hist)
+    v = plan.validate(items, CFG, hist, partial=a.partial)
     if not v["ok"]:
         out({"action": "rejected", **v})
         sys.exit(2)
@@ -234,7 +234,7 @@ def main(argv=None):
     p = argparse.ArgumentParser(prog="msp")
     sp = p.add_subparsers(dest="cmd", required=True)
     c = sp.add_parser("next-day"); c.add_argument("--existing", nargs="*", default=[]); c.add_argument("--state-dir")
-    c = sp.add_parser("init"); c.add_argument("--day", type=int, required=True); c.add_argument("--plan", required=True); c.add_argument("--state", required=True); c.add_argument("--history")
+    c = sp.add_parser("init"); c.add_argument("--day", type=int, required=True); c.add_argument("--plan", required=True); c.add_argument("--state", required=True); c.add_argument("--history"); c.add_argument("--partial", action="store_true", help="test batch: skip composition count")
     c = sp.add_parser("generated"); c.add_argument("--state", required=True); c.add_argument("--k", type=int, required=True); c.add_argument("--evidence", required=True)
     c = sp.add_parser("ingest"); c.add_argument("--state", required=True); c.add_argument("--k", type=int, required=True); c.add_argument("--file", required=True); c.add_argument("--out-dir", required=True); c.add_argument("--source-name")
     c = sp.add_parser("qc-tech"); c.add_argument("--state", required=True); c.add_argument("--day-dir", required=True); c.add_argument("--history-hashes")

@@ -3,9 +3,24 @@ name: adobe-portal-prep
 description: In the Adobe Stock contributor portal, find the uploaded files of one batch, set file type, category and AI declarations, and either stop at review (prepare) or submit (only with recorded approval). Used by browser-operator at Stage 6b.
 ---
 
-> NOT YET VERIFIED. The portal UI has not been inspected in this project.
-> First run: `mode: "inspect"` only — read the page, map the controls,
-> rewrite this file with the real steps, change nothing in the portal.
+> Inspected read-only 2026-10-26 (nothing changed):
+> - Uploaded Files (`/en/uploads`) tabs: New, In review, Reminder, Not
+>   accepted, Upload issues (`/en/uploads/logs/failure`), Releases.
+> - New tab: grid of thumbnails (no filename in DOM; the filename appears
+>   only in the side panel as "Original name(s): <name>" for the selected
+>   file), "Select All", "Upload CSV", sort by upload date.
+> - Side panel per file: "Include in submission" checkbox, delete icon
+>   (NEVER click), File type (Photos/Illustrations), Category (21 names),
+>   "This is Illustrative Editorial content", "Created using generative AI
+>   tools", "People and Property are fictional", title language, Content
+>   title (max 200 characters in UI), Keywords (min 5 - max 49),
+>   "Save work".
+> - DANGER: the top-right button is "Submit <N> files" and submits EVERY
+>   file in New whose "Include in submission" is checked, not just this
+>   batch. On 2026-10-26 New held 68 files (e.g. Day 179(30).jpg). Before
+>   any submit, every non-batch file must be unchecked, or Nathan must
+>   explicitly approve submitting all N.
+> Field-setting steps are still unverified (no edits made yet).
 
 # Job input
 ```json

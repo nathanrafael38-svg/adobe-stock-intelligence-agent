@@ -3,9 +3,25 @@ name: flow-generate-download
 description: Generate exactly one image per prompt in Google Flow and download it as 2K Upscaled, returning evidence per prompt. Used by browser-operator at Stages 2-3.
 ---
 
-> UI steps below come from the routine that produced Day 181 on 2026-10-24.
-> They are NOT yet re-verified. Marked [VERIFY] = confirm on the first test
-> run and update this file.
+> STATUS 2026-10-26: AUTOMATED GENERATION BLOCKED. First test prompt in
+> project C-Day 182 returned "Failed - We noticed some unusual activity. Note
+> that browser extensions that modify the page may cause issues." (not
+> charged). This is Google's automation detection. Do NOT retry, slow down,
+> or otherwise work around it. If this message appears: stop, return
+> `"blocked": "flow_unusual_activity"`. Stages 2-3 are manual until Nathan
+> decides otherwise.
+>
+> Verified 2026-10-26 (UI, viewport 1024x768):
+> - Home lists projects; "New project" creates one named by timestamp.
+> - Project name = textbox "Editable text" top-left. Clicking + typing inserts
+>   mid-string; set it with form_input, then Enter.
+> - Prompt box = textbox "What do you want to create?"; submit = button
+>   "Start generation". Settings = button "Settings trigger" next to the model
+>   chip: Image/Video, aspect 16:9 4:3 1:1 3:4 9:16, model dropdown,
+>   outputs x1 x2 x3 x4, and "Generating will use N credits".
+> - DEFAULT OUTPUTS ARE x2. This is why Day 181 has two images per concept.
+>   Always set x1 and confirm the chip reads "x1" before submitting.
+> Steps marked [VERIFY] below are still unverified.
 
 # Job input
 ```json

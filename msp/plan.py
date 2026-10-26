@@ -25,14 +25,14 @@ def jaccard(a: set, b: set) -> float:
 
 
 def validate(items: list[dict], cfg: dict, history_concepts: list[str] | None = None,
-             max_similarity: float = 0.5) -> dict:
+             max_similarity: float = 0.5, partial: bool = False) -> dict:
     """items: [{prompt, type: illustration|photo, aspect, concept, beauty: bool}].
     history_concepts: titles/concepts from earlier batches."""
     comp = cfg["composition"]
     errs, warns = [], []
     n_ill = sum(i.get("type") == "illustration" for i in items)
     n_ph = sum(i.get("type") == "photo" for i in items)
-    if len(items) != comp["total"] or n_ill != comp["illustration"]["count"] or n_ph != comp["photo"]["count"]:
+    if not partial and (len(items) != comp["total"] or n_ill != comp["illustration"]["count"] or n_ph != comp["photo"]["count"]):
         errs.append(f"composition {len(items)} total / {n_ill} illustration / {n_ph} photo, "
                     f"need {comp['total']}/{comp['illustration']['count']}/{comp['photo']['count']}")
     if sum(bool(i.get("beauty")) for i in items) > comp["beauty_max"]:

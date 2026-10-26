@@ -54,9 +54,12 @@ The run phase is given by the scheduled task: `PHASE=produce` or
    with `--queue-dir /home/claude/work/<batch>/queue`. If `problems`, send
    them back to metadata-writer once, then rerun `meta`.
 6a. Commit every file in the local queue dir to `BASE\_UPLOAD_QUEUE\_incoming\`
-   and both CSVs to `Day N\Metadata\`. Read `_incoming` back with
-   device_list_dir and compare names and sizes with the local queue dir.
-   Only when all match, commit `_incoming\READY.flag` (content: batch id,
+   and both CSVs to `Day N\Metadata\`. Stage every `_incoming` file back and
+   check, per file, `iptc.image_data_hash` equals the local copy and
+   `iptc.verify` passes. Do NOT compare sizes or sha256: the bridge replaces
+   the C2PA (APP11) manifest of modified images with an Anthropic Content
+   Credentials manifest on write (verified 2026-10-26), so bytes differ while
+   pixels and IPTC/XMP are identical. Only when all match, commit `_incoming\READY.flag` (content: batch id,
    file count, time) in a SEPARATE commit call. Never write `.jpg` files to
    the queue root: `tools/adobe_upload.bat` promotes `_incoming` to the root
    only after it sees READY.flag, so a half-written batch is never uploaded.

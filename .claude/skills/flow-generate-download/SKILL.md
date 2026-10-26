@@ -21,6 +21,18 @@ description: Generate exactly one image per prompt in Google Flow and download i
 >   outputs x1 x2 x3 x4, and "Generating will use N credits".
 > - DEFAULT OUTPUTS ARE x2. This is why Day 181 has two images per concept.
 >   Always set x1 and confirm the chip reads "x1" before submitting.
+> - Download path VERIFIED 2026-10-26 (C182 k=1): single click on the tile
+>   opens `/project/<id>/edit/<asset>`; "Show asset info" reveals the full
+>   prompt text (use it to map tile -> k, never the filename); "More options"
+>   (top-right) -> "Download media" -> submenu 1K Original size / 2K Upscaled /
+>   4K Upscaled (locked, "Upgrade"). Clicking 2K shows "Upscaling your image,
+>   download will start automatically". File lands as
+>   `<Flow title>_2K_<yyyymmddHHMMSS>.jpg` via a `<uuid>.tmp`, ~30 s total.
+>   Automated download clicks were NOT blocked (generation was).
+> - The Claude desktop app showed a download confirmation dialog that Nathan
+>   approved. The agent cannot approve it. Until it is set to allow
+>   automatically, a download waits for Nathan.
+> - Generation stays manual (Nathan). This skill now covers DOWNLOAD ONLY.
 > Steps marked [VERIFY] below are still unverified.
 
 # Job input

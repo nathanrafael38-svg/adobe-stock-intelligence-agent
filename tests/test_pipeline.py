@@ -186,3 +186,13 @@ def test_similarity_subject_vs_setting():
     assert not P.is_duplicate("bicycle on wooden table", "lantern on wooden table")
     assert not P.is_duplicate("hands kneading bread dough", "hands chopping fresh parsley")
     assert P.is_duplicate("stack of folded wool sweaters", "folded wool sweater pile")
+
+
+def test_doctor_components_present(capsys):
+    from msp import cli
+    assert cli.main(["doctor"]) in (0, 2)
+    out = json.loads(capsys.readouterr().out)
+    for n in cli.REQUIRED_AGENTS:
+        assert out["agents"][n]["ok"], out["agents"][n]
+    for n in cli.REQUIRED_SKILLS:
+        assert out["skills"][n]["ok"], out["skills"][n]

@@ -28,8 +28,17 @@ Device base = `config.device.base`. Workspace = `$MSP_WORKSPACE`.
    is < 3 h ago → stop: "another run is active". Else commit `RUN.lock` with
    `state=active`, run type and UTC time (files cannot be deleted from here, so the
    lock is released by overwriting it with `state=done`).
-3. Stage every `C*.json` from the device into `$MSP_WORKSPACE/_state/` (device wins).
-4. `msp status --n N` for the open batch (highest N whose state is not fully terminal).
+3. **Component check (before any work).** Confirm the repo agents `visual-qc` and
+   `browser-operator` are available as Agent types and the skill `daily-run` is loaded,
+   e.g. with `python -m msp doctor` plus the agent list in your system context.
+   - Missing from the session but present in the repo → load them from files: Read
+     `.claude/skills/<name>/SKILL.md` for skills; for an agent, spawn
+     `subagent_type: general-purpose` whose prompt starts with the full body of
+     `.claude/agents/<name>.md`, then the task. Log `components: loaded-from-files`.
+   - Files missing or unreadable → stop the run, release the lock, and message Nathan.
+   Never fall back to doing an agent's job yourself (QC independence is the point).
+4. Stage every `C*.json` from the device into `$MSP_WORKSPACE/_state/` (device wins).
+5. `msp status --n N` for every batch that is not terminal; finish older batches first (e.g. assets still `queued` or `fields_configured`).
 
 ## Prompts run
 skill `microstock-prompts` → commit outputs → message Nathan: project name, sheet path,
@@ -50,7 +59,7 @@ For the open batch, only act on assets whose status needs the step:
 | H upload | Windows task "Adobe Stock SFTP Upload" runs every 15 min (after `setup_tasks.bat`) | poll `_UPLOAD_QUEUE` until empty (≤30 min); stage `_logs\winscp.log`; `msp reconcile --log`; never run WinSCP yourself | state |
 | I prepare | `browser-operator` mode=prepare for `sftp_uploaded` | per file confirmed: `msp mark --status fields_configured --evidence '{"category":..,"ai_label":true,"fictional":..,"title_seen":..}'` | state |
 | J checkpoint | you | SendUserMessage + push: table of files, titles, categories, labels, rejects → **"Submit this batch? (ya / tidak)"** | — |
-| K submit | only after Nathan's explicit "ya" in chat | `msp approve --text "<his words>"` → `browser-operator` mode=submit with `APPROVAL: C{N} approved by Nathan` → `msp mark --status submitted --evidence '{"portal_evidence":"<confirmation text>"}'` | state |
+| K submit | **you (orchestrator), never a subagent**, only after Nathan's explicit "ya" in chat | `msp approve --text "<his words>"` → follow `adobe-portal-submit` submit section yourself: reload New tab, untick "Include in submission" on every non-batch file until the button shows exactly the batch count, verify each ticked name, Submit → ask Nathan before ticking the Terms attestation → Continue → CAPTCHA: stop and ask Nathan → verify the In review tab → `msp mark --status submitted --evidence '{"portal_evidence":"..."}'` | state |
 
 Any answer other than an explicit yes → no submission; leave `fields_configured`.
 

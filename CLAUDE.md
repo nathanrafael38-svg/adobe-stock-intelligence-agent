@@ -25,11 +25,12 @@ paths, quotas or platform rules: they live in `config/pipeline.json` and the ski
 ## Agents (spawn with the Agent tool; pass only the inputs listed)
 | agent | use for | gets | returns |
 |---|---|---|---|
-| `browser-operator` | Flow 2K downloads; Adobe portal field setup and (after approval) submit | batch id, list of {k, filename, prompt} or {filename, category, ai_label, fictional}, mode | JSON results with evidence |
+| `browser-operator` | Flow 2K downloads; Adobe portal field setup (**never submits**) | batch id, list of {k, filename, prompt} or {filename, category, ai_label, fictional}, mode | JSON results with evidence |
 | `visual-qc` | subjective visual QC | image paths + concept/type + tech QC result | JSON verdict per image |
 
-Prompt generation, metadata writing, CSV, embedding and queueing are done by you
-with skills + CLI — they need no separate agent.
+Prompt generation, metadata writing, CSV, embedding, queueing and **submission** are done
+by you with skills + CLI — they need no separate agent. Run `python -m msp doctor` at the
+start of every run (daily-run step 3); never do an agent's job yourself if it is missing.
 
 ## Daily run (scheduled: prompts 20:13, process 07:43 Asia/Jakarta)
 Follow skill `daily-run` exactly. Short form:
@@ -38,7 +39,8 @@ Follow skill `daily-run` exactly. Short form:
    → `msp qc` → upscale queue if needed → `visual-qc` → `msp review` → metadata
    (`stock-metadata`) → `msp metadata/embed/csv` → commit finals → `msp enqueue` two-phase
    → READY.flag → wait for upload task → `msp reconcile` → `browser-operator` (mode=prepare)
-   → ask "Submit this batch?" → on "ya": `msp approve` → `browser-operator` (mode=submit).
+   → ask "Submit this batch?" → on "ya": `msp approve` → **you** submit (skill `adobe-portal-submit`;
+   Terms consent and CAPTCHA need Nathan, which a subagent cannot ask for).
 3. Always finish with `msp status` + `msp qc-report`, commit state, and a short summary.
 
 ## Setup in a fresh session

@@ -42,7 +42,10 @@ processing can take minutes). Nathan logs in himself; if a login/2FA/CAPTCHA app
 - Continue may trigger an **Adobe CAPTCHA** ("Verify you are a human"). Stop; Nathan
   solves it; then verify in the **In review** tab before marking `submitted`.
 
-## submit (requires `APPROVAL: C{N} approved by Nathan` in the task)
+## submit — orchestrator only (never in a subagent)
+Requires Nathan's explicit "ya" to "Submit this batch?" recorded with `msp approve`.
+A subagent cannot ask Nathan for the Terms consent or the CAPTCHA, so this section is
+executed by the orchestrator in the main session.
 Select exactly the prepared files → Submit → confirm Adobe's dialogs that belong to
 submission (content agreement checkbox only if it is the standard submit attestation —
 otherwise stop and report the text). Report the confirmation message verbatim.

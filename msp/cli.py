@@ -313,6 +313,53 @@ def cmd_approve(a, cfg):
     _out({"approved": ks})
 
 
+# ---------------- component check ----------------
+REQUIRED_AGENTS = ["visual-qc", "browser-operator"]
+REQUIRED_SKILLS = ["daily-run", "microstock-prompts", "flow-download", "qc-rubric", "stock-metadata",
+                   "adobe-portal-submit"]
+
+
+def _frontmatter_name(path: Path) -> str | None:
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError:
+        return None
+    if not text.startswith("---"):
+        return None
+    for line in text.split("---", 2)[1].splitlines():
+        if line.strip().startswith("name:"):
+            return line.split(":", 1)[1].strip()
+    return None
+
+
+def cmd_doctor(a, cfg):
+    """Verify the agent and skill files the orchestrator depends on exist and are well-formed.
+
+    This only checks the repo files. Whether the session registered them as Agent types /
+    skills must be checked by the orchestrator in its own context (see daily-run step 3).
+    """
+    import shutil as _sh
+    root = C.REPO / ".claude"
+    agents = {n: (root / "agents" / f"{n}.md") for n in REQUIRED_AGENTS}
+    skills = {n: (root / "skills" / n / "SKILL.md") for n in REQUIRED_SKILLS}
+    report = {"agents": {}, "skills": {}, "exiftool": bool(_sh.which("exiftool"))}
+    ok = report["exiftool"]
+    for kind, items in (("agents", agents), ("skills", skills)):
+        for n, p in items.items():
+            name = _frontmatter_name(p)
+            good = name == n
+            report[kind][n] = {"path": str(p.relative_to(C.REPO)), "ok": good,
+                               "error": None if good else ("missing" if not p.exists() else f"frontmatter name {name!r}")}
+            ok = ok and good
+    bo = (root / "agents" / "browser-operator.md")
+    if bo.exists() and "no submit mode" not in bo.read_text(encoding="utf-8"):
+        report["agents"]["browser-operator"].update(ok=False, error="must not contain a submit mode")
+        ok = False
+    report["ok"] = ok
+    _out(report)
+    return 0 if ok else 2
+
+
 # ---------------- reporting ----------------
 def cmd_status(a, cfg):
     b = _batch(cfg, a.n)
@@ -374,6 +421,7 @@ def main(argv=None):
     add("mark", cmd_mark, N, (["--k"], {"type": int, "nargs": "+", "required": True}),
         (["--status"], {"required": True}), (["--evidence"], {"default": None}))
     add("approve", cmd_approve, N, (["--text"], {"required": True}), (["--by"], {"default": "nathan"}))
+    add("doctor", cmd_doctor)
     add("status", cmd_status, N)
     add("qc-report", cmd_qc_report, N)
     a = ap.parse_args(argv)

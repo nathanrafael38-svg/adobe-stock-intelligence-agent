@@ -211,6 +211,45 @@ def cmd_csv(a, cfg):
     return 2 if errs else 0
 
 
+def cmd_verify_device(a, cfg):
+    """Read back the copies that now live on the PC (staged into --dir).
+
+    The device bridge rewrites the C2PA (APP11) segment when it writes a file, so the
+    bytes on the PC differ from the local final. Pixels and IPTC/XMP must be identical;
+    if they are, the device copy's size/sha become the canonical final for queueing.
+    """
+    import hashlib
+    from PIL import Image
+    b = _batch(cfg, a.n)
+    out = []
+    pix = lambda p: hashlib.sha256(Image.open(p).tobytes()).hexdigest()
+    for x in b.in_status("metadata_embedded"):
+        dev = Path(a.dir) / x["filename"]
+        loc = C.local_day(cfg, a.n) / x["filename"]
+        if not dev.exists():
+            out.append({"file": x["filename"], "error": "not staged"})
+            continue
+        rb = M.readback(dev)
+        md = x["metadata"]
+        probs = []
+        if rb.get("XMP:Title") != md["title"]:
+            probs.append("title")
+        if rb.get("IPTC:Keywords") != md["keywords"]:
+            probs.append("keywords")
+        if pix(dev) != pix(loc):
+            probs.append("pixels")
+        if probs:
+            out.append({"file": x["filename"], "error": "device copy differs: " + ",".join(probs)})
+            continue
+        x["final_bytes"], x["final_sha256"] = dev.stat().st_size, Q.sha256(dev)
+        x["device_verified"] = {"bytes": x["final_bytes"], "sha256": x["final_sha256"], "c2pa_present": Q.has_c2pa(dev),
+                                "note": "bridge rewrote C2PA segment; pixels+IPTC/XMP identical"}
+        b.save()
+        out.append({"file": x["filename"], "ok": True, "bytes": x["final_bytes"]})
+    _out(out)
+    return 2 if any("error" in r for r in out) else 0
+
+
 # ---------------- Stage 6a ----------------
 def cmd_enqueue(a, cfg):
     """Phase 1: list files to commit into _incoming (no state change).
@@ -219,6 +258,10 @@ def cmd_enqueue(a, cfg):
     b = _batch(cfg, a.n)
     ready = b.in_status("metadata_embedded")
     if not a.confirm:
+        unverified = [x["filename"] for x in ready if not x.get("device_verified")]
+        if unverified:
+            _out({"error": "run verify-device first", "files": unverified})
+            return 2
         _out({"commit": [{"local": str(C.local_day(cfg, a.n) / x["filename"]),
                           "device": C.device_path(cfg, "_UPLOAD_QUEUE", "_incoming", x["filename"]),
                           "bytes": x["final_bytes"]} for x in ready]})
@@ -325,6 +368,7 @@ def main(argv=None):
     add("metadata", cmd_metadata, N, (["--file"], {"required": True}))
     add("embed", cmd_embed, N)
     add("csv", cmd_csv, N)
+    add("verify-device", cmd_verify_device, N, (["--dir"], {"required": True}))
     add("enqueue", cmd_enqueue, N, (["--confirm"], {"default": None}), (["--local-ts"], {"default": ""}))
     add("reconcile", cmd_reconcile, N, (["--log"], {"required": True}))
     add("mark", cmd_mark, N, (["--k"], {"type": int, "nargs": "+", "required": True}),

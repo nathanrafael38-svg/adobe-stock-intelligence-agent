@@ -34,7 +34,7 @@ For the open batch, only act on assets whose status needs the step:
 | C upscale | you | for `upscale_pending`: commit the original to `_UPSCALE\in\`; the PC task `upscale_watch.bat` writes `_UPSCALE\out\C{N}_kk.jpg`; poll up to 20 min; stage it; `msp ingest` (re-ingest) then `msp qc` again (one upscale per asset max) | state |
 | D visual QC | `visual-qc` agent with downloaded+non-FAIL assets | `msp review` per result | state |
 | E metadata | you, skill `stock-metadata` | `msp metadata`, `msp embed`, `msp csv` | finals `Day N\C{N}_kk.jpg`, `Day N\Metadata\*.csv` |
-| F verify finals | you | device_list_dir `Day N`; sizes must equal `final_bytes` | — |
+| F verify finals | you | stage `Day N\C{N}_kk.jpg` back from the PC → `msp verify-device --dir <staged Day N>` (the bridge rewrites the C2PA segment on write, so bytes change; pixels + IPTC/XMP must match; device size/sha become canonical) | state |
 | G queue | you | `msp enqueue` → commit to `_UPLOAD_QUEUE\_incoming\` → list `_incoming` to JSON → `msp enqueue --confirm listing.json --local-ts "<PC local now>"` → commit READY.flag **last** | READY.flag, state |
 | H upload | Windows task runs `adobe_upload.bat` (schedule in RUNBOOK) | wait/poll `_UPLOAD_QUEUE` empty; stage `_logs\winscp.log`; `msp reconcile --log` | state |
 | I prepare | `browser-operator` mode=prepare for `sftp_uploaded` | per file confirmed: `msp mark --status fields_configured --evidence '{"category":..,"ai_label":true,"fictional":..,"title_seen":..}'` | state |

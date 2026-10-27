@@ -243,6 +243,18 @@ def test_due_stale_batch_skipped_and_new_prompts():
     assert r["skip_stale"] == [{"batch": "C184", "ks": [1, 2, 3]}] and {"do": "prompts"} in r["actions"]
 
 
+def test_prompt_xlsx(tmp_path):
+    from openpyxl import load_workbook
+    plan = _plan()
+    fns = [f"C9_{k:02d}.jpg" for k in range(1, 21)]
+    P.prompt_xlsx(tmp_path / "p.xlsx", "C9", "C-Day 9", plan, fns)
+    ws = load_workbook(tmp_path / "p.xlsx").active
+    prompts = [ws.cell(row=r, column=6).value for r in range(5, ws.max_row + 1) if ws.cell(row=r, column=2).value]
+    assert len(prompts) == 20 and set(prompts) == {p["prompt"] for p in plan}
+    assert ws.cell(row=4, column=6).value == "Prompt"
+    assert ws.cell(row=5, column=1).value.startswith("RATIO 1:1")  # plan order, not alphabetical
+
+
 def test_research_due_rules():
     from datetime import datetime
     from msp.cli import research_due

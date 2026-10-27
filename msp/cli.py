@@ -59,8 +59,8 @@ def cmd_init(a, cfg):
     (sd / f"{bid}-plan.json").write_text(json.dumps(plan, ensure_ascii=False, indent=1), encoding="utf-8")
     b = Batch.create(sd / f"{bid}.json", bid, a.n, plan, fns)
     project = cfg["flow"]["project_pattern"].format(n=a.n)
-    sheet = C.local_day(cfg, a.n) / f"PROMPTS_{bid}.txt"
-    sheet.write_text(P.prompt_sheet(bid, project, plan, fns), encoding="utf-8")
+    sheet = C.local_day(cfg, a.n) / f"PROMPTS_{bid}.xlsx"
+    P.prompt_xlsx(sheet, bid, project, plan, fns)
     b.log("init", project=project, assets=len(plan), plan_warnings=errs)
     _out({"created": True, "batch": bid, "project": project, "commit": [
         {"local": str(sd / f"{bid}-plan.json"), "device": C.device_path(cfg, "_state", f"{bid}-plan.json")},

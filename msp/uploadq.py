@@ -40,8 +40,8 @@ def reconcile(batch, log_text: str) -> list[dict]:
     changes = []
     for a in batch.in_status("queued"):
         q = next(h for h in reversed(a["history"]) if h["status"] == "queued")["evidence"]
-        queued_at = q.get("queued_local_ts", "")  # 'YYYY-MM-DD HH:MM:SS' local PC time
-        hits = [t for t in transfers if t["name"] == a["filename"] and t["ts"] >= queued_at]
+        queued_at = q.get("queued_local_ts", "").replace("T", " ")  # 'YYYY-MM-DD HH:MM:SS' local PC time
+        hits = [t for t in transfers if t["name"] == a["filename"] and t["ts"].replace("T", " ") >= queued_at]
         if not hits:
             continue
         t = hits[-1]

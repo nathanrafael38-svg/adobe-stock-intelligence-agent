@@ -151,13 +151,13 @@ LOG = ("> 2026-10-26 15:11:54.100 Script: put -delete\n"
        ". 2026-10-26 15:11:57.274 Transfer done: 'F:\\x\\_UPLOAD_QUEUE\\C1_01.jpg' => '/C1_01.jpg' [2465744]\n")
 
 
-def _queued(ws, nbytes):
+def _queued(ws, nbytes, queued_ts="2026-10-26 15:00:00"):
     b = Batch.create(ws / "C1.json", "C1", 1, _plan()[:1], ["C1_01.jpg"])
     for s, ev in [("image_generated", {"project": "p", "prompt_match": "exact"}),
                   ("downloaded", {"sha256": "x", "source": "s", "saved_as": "a"}),
                   ("qc_passed", {"stage": "visual"}), ("metadata_validated", {}),
                   ("metadata_embedded", {"verified": True, "sha256": "y", "bytes": nbytes}),
-                  ("queued", {"sha256": "y", "bytes": nbytes, "device_path": "q", "queued_local_ts": "2026-10-26 15:00:00"})]:
+                  ("queued", {"sha256": "y", "bytes": nbytes, "device_path": "q", "queued_local_ts": queued_ts})]:
         b.transition(1, s, ev)
     return b
 
@@ -179,6 +179,12 @@ def test_reconcile_ignores_transfers_before_queue(ws):
     b = _queued(ws, 2465744)
     old = LOG.replace("2026-10-26 15:11:57", "2026-10-25 15:11:57")
     assert U.reconcile(b, old) == []
+
+
+def test_reconcile_accepts_iso_queued_ts(ws):
+    # enqueue --local-ts may store ISO 'YYYY-MM-DDTHH:MM:SS' (C184 regression)
+    b = _queued(ws, 2465744, queued_ts="2026-10-26T15:00:00")
+    assert U.reconcile(b, LOG)[0]["result"] == "UPLOADED"
 
 
 def test_similarity_subject_vs_setting():

@@ -243,6 +243,12 @@ def test_due_stale_batch_skipped_and_new_prompts():
     assert r["skip_stale"] == [{"batch": "C184", "ks": [1, 2, 3]}] and {"do": "prompts"} in r["actions"]
 
 
+def test_similarity_ignores_generic_words():
+    assert not P.is_duplicate("watercolor bowl of fresh strawberries", "fresh vegetables in wicker basket on rustic table")
+    assert not P.is_duplicate("fresh orange juice glass with whole oranges", "fresh vegetables in wicker basket on rustic table")
+    assert P.is_duplicate("flat vector style potted snake plant", "line art potted monstera plant")
+
+
 def test_prompt_xlsx(tmp_path):
     from openpyxl import load_workbook
     plan = _plan()

@@ -19,12 +19,16 @@ def _tokens(text: str) -> set[str]:
 
 STYLE = set("watercolor watercolour illustration photo photograph flat vector line drawing close closeup macro "
             "cartoon minimalist isolated single top view".split())
+# Generic adjectives and container/form words that say nothing about the subject itself
+# ('fresh strawberries' must not match 'fresh vegetables'; 'bowl of ramen' not 'bowl of salad').
+GENERIC = set("fresh small whole warm cozy golden plain sprig bowl glass cup set pair bunch plate jar piece "
+              "tray slice slices".split())
 SETTING_SPLIT = re.compile(r"\b(on|in|with|beside|near|at|over|under|against|inside|during)\b", re.I)
 
 
 def _subject(text: str) -> set[str]:
     head = SETTING_SPLIT.split(text, maxsplit=1)[0]
-    return {t[:-1] if t.endswith("s") and len(t) > 4 else t for t in _tokens(head)} - STYLE
+    return {t[:-1] if t.endswith("s") and len(t) > 4 else t for t in _tokens(head)} - STYLE - GENERIC
 
 
 def similarity(a: str, b: str) -> float:

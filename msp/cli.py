@@ -321,11 +321,12 @@ PROMPTS_FROM_HOUR = 18
 STALE_BATCH_DAYS = 2
 
 
-def due(states: list[dict], now_local, tz_offset_hours: int = 7) -> dict:
+def due(states: list[dict], now_local, tz_offset_hours: int = 7, last_research=None) -> dict:
     """Decide what an hourly run must do. Pure function of batch states and local time.
 
     Returns {"actions": [...], "skip_stale": [{batch, ks}], "silent": bool}.
-    actions: ("process", batch) | ("check_flow", batch) | ("ask_submit", batch) | ("prompts",)
+    actions: ("process", batch) | ("check_flow", batch) | ("ask_submit", batch) | ("prompts",) | ("research",)
+    last_research: aware datetime of the newest research brief, or None.
     """
     from datetime import datetime, timedelta, timezone
     tz = timezone(timedelta(hours=tz_offset_hours))
@@ -351,9 +352,71 @@ def due(states: list[dict], now_local, tz_offset_hours: int = 7) -> dict:
     newest_open = newest and any(a["status"] == "prompt_generated" for a in newest["assets"].values()) \
         and not any(s["batch"] == newest["batch_id"] for s in stale)
     created_today = newest and datetime.fromisoformat(newest["created_at"]).astimezone(tz).date() == now.date()
+    if research_due(now, last_research):
+        actions.insert(0, {"do": "research"})  # first, so tonight's prompts can use it
     if now.hour >= PROMPTS_FROM_HOUR and not created_today and not newest_open:
         actions.append({"do": "prompts"})
     return {"actions": actions, "skip_stale": stale, "silent": not actions and not stale}
+
+
+RESEARCH_WEEKDAY = 0      # Monday
+RESEARCH_FROM_HOUR = 8
+RESEARCH_MAX_AGE_DAYS = 8
+
+
+def research_due(now, last) -> bool:
+    """Weekly research: Mondays from 08:00 if not done today; any day if the newest brief
+    is older than 8 days (PC was off on Monday) or there is none at all."""
+    from datetime import timedelta
+    if last is None:
+        return now.hour >= RESEARCH_FROM_HOUR
+    last = last.astimezone(now.tzinfo)
+    if now - last > timedelta(days=RESEARCH_MAX_AGE_DAYS):
+        return True
+    return now.weekday() == RESEARCH_WEEKDAY and now.hour >= RESEARCH_FROM_HOUR and last.date() < now.date()
+
+
+def research_dir() -> Path:
+    p = C.workspace() / "_research"
+    p.mkdir(parents=True, exist_ok=True)
+    return p
+
+
+def latest_research():
+    """(path, brief dict) of the newest RESEARCH_*.json in the workspace, or (None, None)."""
+    files = sorted(research_dir().glob("RESEARCH_*.json"))
+    if not files:
+        return None, None
+    return files[-1], json.loads(files[-1].read_text(encoding="utf-8"))
+
+
+def cmd_research_brief(a, cfg):
+    """Print the newest research brief (used by microstock-prompts)."""
+    p, brief = latest_research()
+    _out({"path": str(p) if p else None, "brief": brief})
+
+
+def cmd_research_save(a, cfg):
+    """Validate a research brief JSON from the market-researcher agent and store it."""
+    from datetime import datetime
+    brief = json.loads(Path(a.file).read_text(encoding="utf-8"))
+    errs = []
+    for key in ("generated_at", "period", "sources", "portfolio", "priorities", "avoid", "notes_for_prompts"):
+        if key not in brief:
+            errs.append(f"missing {key}")
+    for s_ in brief.get("sources", []):
+        if not s_.get("url") and not s_.get("where"):
+            errs.append(f"source without url/where: {s_}")
+    for pr in brief.get("priorities", []):
+        if not pr.get("evidence"):
+            errs.append(f"priority without evidence: {pr.get('niche')}")
+    if errs:
+        _out({"saved": False, "errors": errs})
+        return 2
+    stamp = datetime.fromisoformat(brief["generated_at"]).strftime("%Y-%m-%d")
+    out = research_dir() / f"RESEARCH_{stamp}.json"
+    out.write_text(json.dumps(brief, ensure_ascii=False, indent=2), encoding="utf-8")
+    _out({"saved": True, "local": str(out), "device": C.device_path(cfg, "_research", out.name)})
 
 
 def cmd_due(a, cfg):
@@ -364,7 +427,9 @@ def cmd_due(a, cfg):
             continue
         states.append(json.loads(p.read_text(encoding="utf-8")))
     now = datetime.fromisoformat(a.now) if a.now else datetime.now()
-    _out(due(states, now))
+    p, brief = latest_research()
+    last = datetime.fromisoformat(brief["generated_at"]) if brief else None
+    _out(due(states, now, last_research=last))
 
 
 def cmd_checkpoint(a, cfg):
@@ -376,8 +441,8 @@ def cmd_checkpoint(a, cfg):
 
 
 # ---------------- component check ----------------
-REQUIRED_AGENTS = ["visual-qc", "browser-operator"]
-REQUIRED_SKILLS = ["daily-run", "microstock-prompts", "flow-download", "qc-rubric", "stock-metadata",
+REQUIRED_AGENTS = ["visual-qc", "browser-operator", "market-researcher"]
+REQUIRED_SKILLS = ["daily-run", "microstock-prompts", "flow-download", "qc-rubric", "stock-metadata", "weekly-research",
                    "adobe-portal-submit"]
 
 
@@ -486,6 +551,8 @@ def main(argv=None):
     add("doctor", cmd_doctor)
     add("due", cmd_due, (["--now"], {"default": None, "help": "local time ISO, e.g. 2026-10-27T19:17+07:00"}))
     add("checkpoint", cmd_checkpoint, N)
+    add("research-brief", cmd_research_brief)
+    add("research-save", cmd_research_save, (["--file"], {"required": True}))
     add("status", cmd_status, N)
     add("qc-report", cmd_qc_report, N)
     a = ap.parse_args(argv)

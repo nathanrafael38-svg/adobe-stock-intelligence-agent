@@ -27,6 +27,7 @@ paths, quotas or platform rules: they live in `config/pipeline.json` and the ski
 |---|---|---|---|
 | `browser-operator` | Flow 2K downloads; Adobe portal field setup (**never submits**) | batch id, list of {k, filename, prompt} or {filename, category, ai_label, fictional}, mode | JSON results with evidence |
 | `visual-qc` | subjective visual QC | image paths + concept/type + tech QC result | JSON verdict per image |
+| `market-researcher` | weekly research brief (read-only: Adobe dashboard + public sources) | period, path to `_state` | one evidence-backed brief JSON (`msp research-save` validates) |
 
 Prompt generation, metadata writing, CSV, embedding, queueing and **submission** are done
 by you with skills + CLI — they need no separate agent. Run `python -m msp doctor` at the

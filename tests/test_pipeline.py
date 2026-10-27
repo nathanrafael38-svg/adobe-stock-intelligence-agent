@@ -207,7 +207,8 @@ def test_due_silent_when_nothing_to_do():
     from datetime import datetime
     from msp.cli import due
     st = [_st("C183", 183, "2026-10-26T11:00:00+00:00", ["submitted", "qc_reject"])]
-    r = due(st, datetime.fromisoformat("2026-10-27T10:17+07:00"))
+    r = due(st, datetime.fromisoformat("2026-10-27T10:17+07:00"),
+            last_research=datetime.fromisoformat("2026-10-26T09:00+07:00"))
     assert r["silent"] and r["actions"] == []
 
 
@@ -240,3 +241,28 @@ def test_due_stale_batch_skipped_and_new_prompts():
     st = [_st("C184", 184, "2026-10-24T13:13:00+00:00", ["prompt_generated"] * 3)]
     r = due(st, datetime.fromisoformat("2026-10-27T19:17+07:00"))
     assert r["skip_stale"] == [{"batch": "C184", "ks": [1, 2, 3]}] and {"do": "prompts"} in r["actions"]
+
+
+def test_research_due_rules():
+    from datetime import datetime
+    from msp.cli import research_due
+    mon = datetime.fromisoformat("2026-11-02T08:17+07:00")   # Monday
+    assert research_due(mon, datetime.fromisoformat("2026-10-26T09:00+07:00"))
+    assert not research_due(mon, datetime.fromisoformat("2026-11-02T08:20+07:00"))  # done today
+    assert not research_due(datetime.fromisoformat("2026-11-02T07:17+07:00"), datetime.fromisoformat("2026-10-26T09:00+07:00"))
+    assert not research_due(datetime.fromisoformat("2026-10-29T10:17+07:00"), datetime.fromisoformat("2026-10-26T09:00+07:00"))
+    assert research_due(datetime.fromisoformat("2026-11-04T10:17+07:00"), datetime.fromisoformat("2026-10-26T09:00+07:00"))  # >8 days
+    assert research_due(datetime.fromisoformat("2026-10-27T10:17+07:00"), None)
+
+
+def test_research_save_requires_evidence(ws, tmp_path):
+    from msp import cli
+    bad = {"generated_at": "2026-11-02T09:00+07:00", "period": "w45", "sources": [{"where": "dashboard"}],
+           "portfolio": {}, "priorities": [{"niche": "christmas"}], "avoid": [], "notes_for_prompts": []}
+    f = tmp_path / "b.json"; f.write_text(json.dumps(bad))
+    assert cli.main(["research-save", "--file", str(f)]) == 2
+    bad["priorities"][0]["evidence"] = "Insights: top downloads in Food"
+    f.write_text(json.dumps(bad))
+    assert cli.main(["research-save", "--file", str(f)]) == 0
+    p, brief = cli.latest_research()
+    assert p.name == "RESEARCH_2026-11-02.json" and brief["period"] == "w45"

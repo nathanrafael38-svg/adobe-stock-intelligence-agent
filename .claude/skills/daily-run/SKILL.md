@@ -17,6 +17,9 @@ being on. Each run decides its own work:
    - `check_flow` → open Flow project `C-Day N`; if tiles exist, "Process run" step A
      onward; if none yet, do nothing and stay silent (Nathan has not generated).
    - `ask_submit` → step J for that batch, then `msp checkpoint --n N` (no re-ask for 12 h).
+   - `research` → spawn agent `market-researcher` (skill `weekly-research`); store its brief
+     with `msp research-save` and commit it to `<base>\_research\`; send Nathan the summary.
+     Runs before `prompts`, so tonight's prompts already use it.
    - `prompts` → "Prompts run" (only offered from 18:00, once per day, when the newest
      batch is no longer waiting for generation).
 5. Message Nathan only when something changed or needs him (prompts ready, QC summary,
@@ -53,7 +56,8 @@ Device base = `config.device.base`. Workspace = `$MSP_WORKSPACE`.
      `.claude/agents/<name>.md`, then the task. Log `components: loaded-from-files`.
    - Files missing or unreadable → stop the run, release the lock, and message Nathan.
    Never fall back to doing an agent's job yourself (QC independence is the point).
-4. Stage every `C*.json` from the device into `$MSP_WORKSPACE/_state/` (device wins).
+4. Stage every `C*.json` from the device into `$MSP_WORKSPACE/_state/` and every
+   `<base>\_research\RESEARCH_*.json` into `$MSP_WORKSPACE/_research/` (device wins).
 5. `msp status --n N` for every batch that is not terminal; finish older batches first (e.g. assets still `queued` or `fields_configured`).
 
 ## Prompts run

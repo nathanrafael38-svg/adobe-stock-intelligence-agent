@@ -39,7 +39,11 @@ Downloads land in `C:\Users\Nathan\Downloads\Buat Claude` (Edge setting, set by 
 - One tile takes ~20 s. Run the loop inside the page as a fire-and-forget async function
   storing results in `window.__dl` and poll it (a single JS call times out after 45 s).
 - Match tiles to prompts by exact normalised prompt text (hash both sides), not by order.
-- The composer showed model "Nano Banana 2.1" on C-Day 183; report the model seen.
+- Required model: **Nano Banana Pro** (Nathan's decision, 2026-10-27). Flow's default is
+  Nano Banana 2 Lite and it may also offer Nano Banana 2.1. Read the model label from the
+  composer and, when shown, from each tile's details, and return `model_seen` per k
+  (`"unknown"` if Flow does not show it). Do not change the model and do not regenerate.
+  C-Day 183 and 184 were generated with "Nano Banana 2.1".
 
 ## Things that go wrong
 - Aspect: Flow keeps the last ratio. If a 16:9 prompt's tile is square, still

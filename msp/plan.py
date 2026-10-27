@@ -114,7 +114,7 @@ def validate(plan: list[dict], cfg: dict, history: list[tuple[str, str]]) -> lis
 
 def prompt_sheet(batch_id: str, project: str, plan: list[dict], filenames: list[str]) -> str:
     """Plain-text sheet Nathan pastes from, one prompt per block, grouped by aspect."""
-    lines = [f"{batch_id} — Flow project: {project}", "Settings: Nano Banana Pro, x1 output per prompt.",
+    lines = [f"{batch_id} — Flow project: {project}", "Settings: model Nano Banana Pro (NOT 2 Lite / 2.1), x1 output per prompt.",
              "CHECK the aspect ratio before each group; Flow keeps the last used ratio.", ""]
     for aspect in dict.fromkeys(p["aspect"] for p in plan):  # plan order: 1:1 first
         lines.append(f"===== ASPECT {aspect} =====")
@@ -139,7 +139,7 @@ def prompt_xlsx(path, batch_id: str, project: str, plan: list[dict], filenames: 
     font = "Arial"
     ws["A1"] = f"{batch_id} — Flow project: {project}"
     ws["A1"].font = Font(name=font, bold=True, size=13)
-    ws["A2"] = ("Nano Banana Pro, x1 per prompt. Set the ratio before each group "
+    ws["A2"] = ("Model: Nano Banana Pro (NOT 2 Lite / 2.1), x1 per prompt. Set the ratio before each group "
                 "(Flow keeps the last ratio). Copy a prompt from column F.")
     ws["A2"].font = Font(name=font, italic=True, size=10, color="555555")
     headers = ["No", "File", "Aspect", "Type", "Concept", "Prompt", "Generated (✓)"]

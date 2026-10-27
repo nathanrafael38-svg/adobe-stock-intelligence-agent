@@ -65,5 +65,5 @@ evidence keys (see `msp/state.py`). Batch approvals are stored in `approvals[]`.
   Day N\C{N}_kk.jpg            final, IPTC+XMP embedded, approved by QC
   Day N\_original\C{N}_kk.jpg  raw 2K download (all, incl. rejects)
   Day N\Metadata\adobe-metadata.csv, vecteezy-metadata.csv
-  Day N\QC_C{N}.json, PROMPTS_C{N}.txt
+  Day N\QC_C{N}.json, PROMPTS_C{N}.xlsx
 ```

@@ -34,7 +34,7 @@ start of every run (daily-run step 3); never do an agent's job yourself if it is
 
 ## Daily run (scheduled hourly 06:17–23:17 Asia/Jakarta; `msp due` decides the work)
 Follow skill `daily-run` exactly. Short form:
-1. Evening (prompts run): `microstock-prompts` → `msp init` → commit plan, state, PROMPTS sheet.
+1. Evening (prompts run): `microstock-prompts` → `msp init` → commit plan, state, Excel prompt sheet (`PROMPTS_C{N}.xlsx`).
 2. Morning (process run): stage state → `browser-operator` (mode=download) → `msp ingest`
    → `msp qc` → upscale queue if needed → `visual-qc` → `msp review` → metadata
    (`stock-metadata`) → `msp metadata/embed/csv` → commit finals → `msp enqueue` two-phase

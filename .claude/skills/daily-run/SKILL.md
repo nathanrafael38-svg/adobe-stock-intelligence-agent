@@ -69,7 +69,7 @@ For the open batch, only act on assets whose status needs the step:
 
 | step | who | command / action | commit to device |
 |---|---|---|---|
-| A download | `browser-operator` mode=download (Edge, microstock account, in-page 2K loop, files in `Buat Claude`, match by exact prompt hash) | per success: `msp generated` then `msp ingest --src <staged>`; missing tiles stay `prompt_generated` and go in the summary | `_original\C{N}_kk.jpg`, state |
+| A download | `browser-operator` mode=download (Edge, microstock account, in-page 2K loop, files in `Buat Claude`, match by exact prompt hash) | per success: `msp generated` then `msp ingest --src <staged>`; missing tiles stay `prompt_generated` and go in the summary; any `model_seen` other than Nano Banana Pro goes in the summary as a warning to Nathan (QC still decides) | `_original\C{N}_kk.jpg`, state |
 | B tech QC | you | `msp qc --n N` | state |
 | C upscale | you | for `upscale_pending`: commit the original to `_UPSCALE\in\`; the PC task `upscale_watch.bat` writes `_UPSCALE\out\C{N}_kk.jpg`; poll up to 20 min; stage it; `msp ingest` (re-ingest) then `msp qc` again (one upscale per asset max) | state |
 | D visual QC | two `visual-qc` agents in parallel (10 images each) for downloaded+non-FAIL assets | `msp review` per result, then decide every `qc_review` yourself (standing decisions) | state |

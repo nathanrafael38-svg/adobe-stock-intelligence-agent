@@ -110,7 +110,7 @@ def validate(plan: list[dict], cfg: dict, history: list[tuple[str, str]]) -> lis
 
 def prompt_sheet(batch_id: str, project: str, plan: list[dict], filenames: list[str]) -> str:
     """Plain-text sheet Nathan pastes from, one prompt per block, grouped by aspect."""
-    lines = [f"{batch_id} — Flow project: {project}", "Settings: Nano Banana Pro, x1 output per prompt.",
+    lines = [f"{batch_id} — Flow project: {project}", "Settings: model Nano Banana Pro (NOT 2 Lite / 2.1), x1 output per prompt.",
              "CHECK the aspect ratio before each group; Flow keeps the last used ratio.", ""]
     for aspect in sorted({p["aspect"] for p in plan}):
         lines.append(f"===== ASPECT {aspect} =====")

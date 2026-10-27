@@ -27,6 +27,7 @@ paths, quotas or platform rules: they live in `config/pipeline.json` and the ski
 |---|---|---|---|
 | `browser-operator` | Flow 2K downloads; Adobe portal field setup (**never submits**) | batch id, list of {k, filename, prompt} or {filename, category, ai_label, fictional}, mode | JSON results with evidence |
 | `visual-qc` | subjective visual QC | image paths + concept/type + tech QC result | JSON verdict per image |
+| `market-researcher` | weekly research brief (read-only: Adobe dashboard + public sources) | period, path to `_state` | one evidence-backed brief JSON (`msp research-save` validates) |
 
 Prompt generation, metadata writing, CSV, embedding, queueing and **submission** are done
 by you with skills + CLI — they need no separate agent. Run `python -m msp doctor` at the
@@ -34,7 +35,7 @@ start of every run (daily-run step 3); never do an agent's job yourself if it is
 
 ## Daily run (scheduled hourly 06:17–23:17 Asia/Jakarta; `msp due` decides the work)
 Follow skill `daily-run` exactly. Short form:
-1. Evening (prompts run): `microstock-prompts` → `msp init` → commit plan, state, PROMPTS sheet.
+1. Evening (prompts run): `microstock-prompts` → `msp init` → commit plan, state, Excel prompt sheet (`PROMPTS_C{N}.xlsx`).
 2. Morning (process run): stage state → `browser-operator` (mode=download) → `msp ingest`
    → `msp qc` → upscale queue if needed → `visual-qc` → `msp review` → metadata
    (`stock-metadata`) → `msp metadata/embed/csv` → commit finals → `msp enqueue` two-phase

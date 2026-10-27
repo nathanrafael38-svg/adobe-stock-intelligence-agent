@@ -116,10 +116,61 @@ def prompt_sheet(batch_id: str, project: str, plan: list[dict], filenames: list[
     """Plain-text sheet Nathan pastes from, one prompt per block, grouped by aspect."""
     lines = [f"{batch_id} — Flow project: {project}", "Settings: Nano Banana Pro, x1 output per prompt.",
              "CHECK the aspect ratio before each group; Flow keeps the last used ratio.", ""]
-    for aspect in sorted({p["aspect"] for p in plan}):
+    for aspect in dict.fromkeys(p["aspect"] for p in plan):  # plan order: 1:1 first
         lines.append(f"===== ASPECT {aspect} =====")
         for k, (item, fn) in enumerate(zip(plan, filenames), start=1):
             if item["aspect"] != aspect:
                 continue
             lines += [f"[{k:02d}] {fn} — {item['type']} — {item['concept']}", item["prompt"], ""]
     return "\n".join(lines)
+
+
+def prompt_xlsx(path, batch_id: str, project: str, plan: list[dict], filenames: list[str]) -> None:
+    """Excel prompt sheet for Nathan: one row per prompt, grouped 1:1 first then 16:9.
+
+    Columns: No | File | Aspect | Type | Concept | Prompt | Generated (for Nathan to tick).
+    """
+    from openpyxl import Workbook
+    from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = batch_id
+    font = "Arial"
+    ws["A1"] = f"{batch_id} — Flow project: {project}"
+    ws["A1"].font = Font(name=font, bold=True, size=13)
+    ws["A2"] = ("Nano Banana Pro, x1 per prompt. Set the ratio before each group "
+                "(Flow keeps the last ratio). Copy a prompt from column F.")
+    ws["A2"].font = Font(name=font, italic=True, size=10, color="555555")
+    headers = ["No", "File", "Aspect", "Type", "Concept", "Prompt", "Generated (✓)"]
+    hdr_row = 4
+    fill = PatternFill("solid", fgColor="1F3864")
+    thin = Side(style="thin", color="BFBFBF")
+    for c, h in enumerate(headers, start=1):
+        cell = ws.cell(row=hdr_row, column=c, value=h)
+        cell.font = Font(name=font, bold=True, color="FFFFFF")
+        cell.fill = fill
+        cell.alignment = Alignment(vertical="center", horizontal="center")
+    group_fill = {"1:1": PatternFill("solid", fgColor="E2EFDA"), "16:9": PatternFill("solid", fgColor="DDEBF7")}
+    r = hdr_row + 1
+    for aspect in dict.fromkeys(p["aspect"] for p in plan):  # plan order: 1:1 first
+        ws.cell(row=r, column=1, value=f"RATIO {aspect} — switch Flow to {aspect} before these")
+        ws.cell(row=r, column=1).font = Font(name=font, bold=True)
+        for c in range(1, len(headers) + 1):
+            ws.cell(row=r, column=c).fill = group_fill.get(aspect, PatternFill())
+        r += 1
+        for k, (item, fn) in enumerate(zip(plan, filenames), start=1):
+            if item["aspect"] != aspect:
+                continue
+            vals = [k, fn, item["aspect"], item["type"], item["concept"], item["prompt"], ""]
+            for c, v in enumerate(vals, start=1):
+                cell = ws.cell(row=r, column=c, value=v)
+                cell.font = Font(name=font, size=10)
+                cell.border = Border(top=thin, bottom=thin, left=thin, right=thin)
+                cell.alignment = Alignment(vertical="top", wrap_text=(c in (5, 6)),
+                                           horizontal="center" if c in (1, 3, 7) else "left")
+            r += 1
+    for col, w in zip("ABCDEFG", (5, 14, 8, 12, 32, 95, 14)):
+        ws.column_dimensions[col].width = w
+    ws.freeze_panes = ws.cell(row=hdr_row + 1, column=1)
+    wb.save(path)

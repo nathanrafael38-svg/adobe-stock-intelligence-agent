@@ -11,7 +11,9 @@ Output: a JSON list of 20 objects `{concept, type, aspect, prompt}` in this orde
 ## Inputs to read first
 - `msp next-n` (with device state names) → N.
 - `_state/C*.json` history concepts: `python -c "from msp import plan,config; print(plan.history_concepts(config.local_state_dir()))"`.
-- The latest weekly Adobe report, if present in the session, for niche priorities.
+- **The latest research brief:** `python -m msp research-brief`. Follow its `priorities`
+  (which subjects get more of the 20 slots), `avoid` and `notes_for_prompts`. Record in the
+  plan log which brief you used. No brief yet → use the rules below and say so to Nathan.
 
 ## Rules
 - Commercial stock subjects with a clear buyer use: food, home, work, seasonal (look
@@ -35,4 +37,4 @@ subject. (The validator rejects it otherwise — it invites stray hands.)
 ## Finish
 Save as `$MSP_WORKSPACE/plan_C{N}.json`, run `python -m msp validate-plan`, fix every
 error, then `python -m msp init --n N --plan ...` and commit the three files it lists.
-Send Nathan the PROMPTS sheet path and the Flow project name `C-Day N`.
+Send Nathan the Excel prompt sheet `Day N\PROMPTS_C{N}.xlsx` (attach it with SendUserFile) and the Flow project name `C-Day N`.

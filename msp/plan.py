@@ -18,7 +18,7 @@ def _tokens(text: str) -> set[str]:
 
 
 STYLE = set("watercolor watercolour illustration photo photograph flat vector line drawing close closeup macro "
-            "cartoon minimalist isolated single top view".split())
+            "cartoon minimalist isolated single top view style art minimal continuous".split())
 # Generic adjectives and container/form words that say nothing about the subject itself
 # ('fresh strawberries' must not match 'fresh vegetables'; 'bowl of ramen' not 'bowl of salad').
 GENERIC = set("fresh small whole warm cozy golden plain sprig bowl glass cup set pair bunch plate jar piece "

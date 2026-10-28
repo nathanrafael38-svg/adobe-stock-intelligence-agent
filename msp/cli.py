@@ -322,16 +322,16 @@ def cmd_approve(a, cfg):
     _out({"approved": ks})
 
 
-# ---------------- hourly scheduling ----------------
+# ---------------- scheduling (two runs a day) ----------------
 PROCESS_STATUSES = {"downloaded", "upscale_pending", "qc_review", "qc_passed", "metadata_validated",
                     "metadata_embedded", "queued", "sftp_uploaded", "submit_approved"}
 CHECKPOINT_QUIET_HOURS = 12
-PROMPTS_FROM_HOUR = 18
+PROMPTS_FROM_HOUR = 6
 STALE_BATCH_DAYS = 2
 
 
 def due(states: list[dict], now_local, tz_offset_hours: int = 7, last_research=None) -> dict:
-    """Decide what an hourly run must do. Pure function of batch states and local time.
+    """Decide what a scheduled run (morning ~07:07 / evening ~19:07 WIB) must do. Pure function of batch states and local time.
 
     Returns {"actions": [...], "skip_stale": [{batch, ks}], "silent": bool}.
     actions: ("process", batch) | ("check_flow", batch) | ("ask_submit", batch) | ("prompts",) | ("research",)
@@ -369,12 +369,12 @@ def due(states: list[dict], now_local, tz_offset_hours: int = 7, last_research=N
 
 
 RESEARCH_WEEKDAY = 0      # Monday
-RESEARCH_FROM_HOUR = 8
+RESEARCH_FROM_HOUR = 6
 RESEARCH_MAX_AGE_DAYS = 8
 
 
 def research_due(now, last) -> bool:
-    """Weekly research: Mondays from 08:00 if not done today; any day if the newest brief
+    """Weekly research: Mondays from 06:00 if not done today; any day if the newest brief
     is older than 8 days (PC was off on Monday) or there is none at all."""
     from datetime import timedelta
     if last is None:
@@ -428,6 +428,57 @@ def cmd_research_save(a, cfg):
     _out({"saved": True, "local": str(out), "device": C.device_path(cfg, "_research", out.name)})
 
 
+def weekly_stats(states: list[dict], now, days: int = 7) -> dict:
+    """Pipeline numbers for the weekly report: what was made, what failed before Adobe, why.
+
+    Pure function of batch states. A batch counts when it was created within `days` of `now`.
+    Adobe-side outcomes (accepted / not accepted / sales) are NOT in state; the
+    market-researcher reads them from the portal.
+    """
+    from collections import Counter
+    from datetime import datetime, timedelta
+    since = now - timedelta(days=days)
+    out, tot = [], Counter()
+    for d in sorted(states, key=lambda d: d["day"]):
+        created = datetime.fromisoformat(d["created_at"])
+        if created.astimezone(now.tzinfo) < since:
+            continue
+        assets = list(d["assets"].values())
+        cnt = Counter(a["status"] for a in assets)
+        gen = sum(1 for a in assets if a["status"] not in ("prompt_generated", "skipped"))
+        rejected = [a for a in assets if a["status"] == "qc_reject"]
+        reasons = []
+        for a in rejected:
+            ev = a.get("qc_review") or a.get("qc_tech") or {}
+            note = ev.get("note") or "; ".join(ev.get("errors", []) + ev.get("flags", [])) or "no reason recorded"
+            reasons.append({"file": a["filename"], "type": a["type"], "concept": a["concept"], "reason": note[:160]})
+        failed = []
+        for a in assets:
+            if a["status"] == "failed":
+                last = a["history"][-1]["evidence"] if a.get("history") else {}
+                failed.append({"file": a["filename"], "error": last.get("error"), "detail": str(last.get("detail", ""))[:160]})
+        passed = gen - len(rejected)
+        out.append({"batch": d["batch_id"], "created": d["created_at"], "assets": len(assets), "generated": gen,
+                    "status_counts": dict(cnt), "qc_rejected": len(rejected),
+                    "qc_reject_rate": round(len(rejected) / gen, 2) if gen else None,
+                    "passed_qc": passed, "submitted": cnt.get("submitted", 0),
+                    "reject_reasons": reasons, "failed": failed})
+        tot.update({"generated": gen, "qc_rejected": len(rejected), "passed_qc": passed,
+                    "submitted": cnt.get("submitted", 0), "failed": len(failed)})
+    t = dict(tot)
+    t["qc_reject_rate"] = round(t.get("qc_rejected", 0) / t["generated"], 2) if t.get("generated") else None
+    return {"since": since.isoformat(), "days": days, "batches": out, "totals": t}
+
+
+def cmd_weekly_stats(a, cfg):
+    from datetime import datetime, timedelta, timezone
+    tz = timezone(timedelta(hours=7))
+    now = datetime.fromisoformat(a.now) if a.now else datetime.now(tz)
+    states = [json.loads(p.read_text(encoding="utf-8")) for p in sorted(C.local_state_dir().glob("C*.json"))
+              if not p.name.endswith("-plan.json")]
+    _out(weekly_stats(states, now if now.tzinfo else now.replace(tzinfo=tz), a.days))
+
+
 def cmd_due(a, cfg):
     from datetime import datetime
     states = []
@@ -442,7 +493,7 @@ def cmd_due(a, cfg):
 
 
 def cmd_checkpoint(a, cfg):
-    """Record that "Submit this batch?" was sent, so hourly runs do not ask again for 12 h."""
+    """Record that "Submit this batch?" was sent, so scheduled runs do not ask again for 12 h."""
     b = _batch(cfg, a.n)
     ks = [x["k"] for x in b.in_status("fields_configured")]
     b.log("submit_checkpoint", assets=ks)
@@ -560,6 +611,7 @@ def main(argv=None):
     add("doctor", cmd_doctor)
     add("due", cmd_due, (["--now"], {"default": None, "help": "local time ISO, e.g. 2026-10-27T19:17+07:00"}))
     add("checkpoint", cmd_checkpoint, N)
+    add("weekly-stats", cmd_weekly_stats, (["--days"], {"type": int, "default": 7}), (["--now"], {"default": None}))
     add("research-brief", cmd_research_brief)
     add("research-save", cmd_research_save, (["--file"], {"required": True}))
     add("status", cmd_status, N)

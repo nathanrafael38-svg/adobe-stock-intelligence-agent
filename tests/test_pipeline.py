@@ -206,18 +206,19 @@ def _st(bid, day, created, statuses, log=None):
 def test_due_silent_when_nothing_to_do():
     from datetime import datetime
     from msp.cli import due
-    st = [_st("C183", 183, "2026-10-26T11:00:00+00:00", ["submitted", "qc_reject"])]
+    st = [_st("C184", 184, "2026-10-27T01:00:00+00:00", ["submitted", "qc_reject"])]   # created today
     r = due(st, datetime.fromisoformat("2026-10-27T10:17+07:00"),
             last_research=datetime.fromisoformat("2026-10-26T09:00+07:00"))
     assert r["silent"] and r["actions"] == []
 
 
-def test_due_prompts_only_in_evening_once_per_day():
+def test_due_prompts_from_morning_once_per_day():
     from datetime import datetime
     from msp.cli import due
     st = [_st("C183", 183, "2026-10-26T11:00:00+00:00", ["submitted"])]
-    assert {"do": "prompts"} in due(st, datetime.fromisoformat("2026-10-27T19:17+07:00"))["actions"]
-    assert {"do": "prompts"} not in due(st, datetime.fromisoformat("2026-10-27T10:17+07:00"))["actions"]
+    assert {"do": "prompts"} in due(st, datetime.fromisoformat("2026-10-27T07:07+07:00"))["actions"]
+    assert {"do": "prompts"} in due(st, datetime.fromisoformat("2026-10-27T19:07+07:00"))["actions"]  # morning run missed
+    assert {"do": "prompts"} not in due(st, datetime.fromisoformat("2026-10-27T05:17+07:00"))["actions"]
     st.append(_st("C184", 184, "2026-10-27T12:13:00+00:00", ["prompt_generated"] * 20))
     r = due(st, datetime.fromisoformat("2026-10-27T21:17+07:00"))
     assert {"do": "prompts"} not in r["actions"] and {"do": "check_flow", "batch": "C184"} in r["actions"]
@@ -267,7 +268,7 @@ def test_research_due_rules():
     mon = datetime.fromisoformat("2026-11-02T08:17+07:00")   # Monday
     assert research_due(mon, datetime.fromisoformat("2026-10-26T09:00+07:00"))
     assert not research_due(mon, datetime.fromisoformat("2026-11-02T08:20+07:00"))  # done today
-    assert not research_due(datetime.fromisoformat("2026-11-02T07:17+07:00"), datetime.fromisoformat("2026-10-26T09:00+07:00"))
+    assert not research_due(datetime.fromisoformat("2026-11-02T05:17+07:00"), datetime.fromisoformat("2026-10-26T09:00+07:00"))
     assert not research_due(datetime.fromisoformat("2026-10-29T10:17+07:00"), datetime.fromisoformat("2026-10-26T09:00+07:00"))
     assert research_due(datetime.fromisoformat("2026-11-04T10:17+07:00"), datetime.fromisoformat("2026-10-26T09:00+07:00"))  # >8 days
     assert research_due(datetime.fromisoformat("2026-10-27T10:17+07:00"), None)
@@ -284,6 +285,25 @@ def test_research_save_requires_evidence(ws, tmp_path):
     assert cli.main(["research-save", "--file", str(f)]) == 0
     p, brief = cli.latest_research()
     assert p.name == "RESEARCH_2026-11-02.json" and brief["period"] == "w45"
+
+
+def test_weekly_stats_counts_and_reasons():
+    from datetime import datetime
+    from msp.cli import weekly_stats
+    def asset(k, status, note=None):
+        a = {"k": k, "filename": f"C9_{k:02d}.jpg", "type": "photo", "concept": f"c{k}", "status": status, "history": []}
+        if note:
+            a["qc_review"] = {"note": note}
+        return a
+    st = [{"batch_id": "C9", "day": 9, "created_at": "2026-10-27T01:00:00+00:00",
+           "assets": {"1": asset(1, "submitted"), "2": asset(2, "qc_reject", "extra fingers"), "3": asset(3, "prompt_generated")}},
+          {"batch_id": "C1", "day": 1, "created_at": "2026-09-01T01:00:00+00:00", "assets": {"1": asset(1, "submitted")}}]
+    r = weekly_stats(st, datetime.fromisoformat("2026-10-28T07:00+07:00"), 7)
+    assert [b["batch"] for b in r["batches"]] == ["C9"]            # old batch outside the window
+    b = r["batches"][0]
+    assert b["generated"] == 2 and b["qc_rejected"] == 1 and b["qc_reject_rate"] == 0.5
+    assert b["reject_reasons"][0]["reason"] == "extra fingers"
+    assert r["totals"]["submitted"] == 1
 
 
 def test_approval_gate_accepts_explicit_yes_only():

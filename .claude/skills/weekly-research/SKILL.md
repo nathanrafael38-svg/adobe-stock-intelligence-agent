@@ -54,3 +54,27 @@ Save the agent's JSON to `$MSP_WORKSPACE/research.json` → `python -m msp resea
 --file …` (rejects briefs without evidence) → commit the file it prints to
 `<base>\_research\` → send Nathan the `summary_for_nathan` plus the top 3 priorities.
 `microstock-prompts` reads it with `python -m msp research-brief`.
+
+## 5. Weekly report + evaluation (orchestrator, same run)
+Nathan wants one report per week with an honest evaluation and what to do next week.
+Facts first, then judgement; label every judgement as fact or hypothesis.
+
+1. Numbers: `python -m msp weekly-stats --days 7` (made, QC-rejected and why, passed,
+   submitted, failed per batch) plus the brief's `portfolio` block (Adobe sales, downloads,
+   accepted / not accepted, In review). Anything Adobe-side that the researcher could not
+   read is written as "not available", never estimated.
+2. Sections, in this order, in Indonesian:
+   - **Ringkasan minggu ini**: batches, generated, passed QC, submitted, accepted/rejected by
+     Adobe, sales and downloads if available.
+   - **Apa yang berhasil / gagal**: QC reject rate per batch and the top reasons; which
+     concepts, types (illustration vs photo) and models (Nano Banana Pro vs 2.1) correlate
+     with rejects. Small samples are said to be small.
+   - **Evaluasi**: what the numbers support (fact) and what is only a guess (hypothesis);
+     whether the pipeline itself caused problems (stale locks, failed uploads, wrong project names).
+   - **Rekomendasi minggu depan**: at most 5 concrete actions, each with the evidence it rests on
+     and how we will know next week whether it worked (a number to compare).
+3. Deliver: publish as a Docs artifact when the Artifact tool offers it (title
+   "Laporan mingguan 2026-W45"), otherwise send it as a `.md` file with SendUserFile. Send Nathan the
+   five-line summary with the link or file. Never mention numbers that are not in the sources above.
+4. The recommendations feed `notes_for_prompts` of the next brief; do not change composition
+   or platform limits unless Nathan says so.

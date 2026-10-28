@@ -4,11 +4,14 @@ description: Orchestrator runbook for the C-Day N microstock pipeline - stage or
 ---
 # Daily run (orchestrator)
 
-Verified end-to-end on C183 (2026-10-26). One state machine, run **hourly** (06–23 WIB) by
-the scheduled task "Microstock hourly run", so work starts within an hour of the PC
-being on. Each run decides its own work:
+Verified end-to-end on C183–C185. One state machine, run **twice a day** (~07:07 and ~19:07
+WIB) by the scheduled task "Microstock daily run" (the hourly run was removed on 2026-10-28:
+too many weekly tokens). Nathan can also start any stage in chat ("sudah generate").
+Typical day: morning run = research (Mondays) + prompts for today's C-Day; evening run =
+download/QC/metadata/queue what Nathan generated, reconcile the 09:30 upload, prepare the
+portal and ask "Submit this batch?". Each run decides its own work:
 
-## Hourly mode (do this right after "0. Start")
+## Scheduled mode (do this right after "0. Start")
 1. `python -m msp due --now "<PC local time ISO, +07:00>"` on the staged states.
 2. `silent: true` → release the lock (`state=done`) and **end without any message**.
 3. `skip_stale` → `msp mark --n N --k ... --status skipped --evidence '{"reason":"not generated within 2 days"}'`.
@@ -20,8 +23,11 @@ being on. Each run decides its own work:
    - `research` → spawn agent `market-researcher` (skill `weekly-research`); store its brief
      with `msp research-save` and commit it to `<base>\_research\`; send Nathan the summary.
      Runs before `prompts`, so tonight's prompts already use it.
-   - `prompts` → "Prompts run" (only offered from 18:00, once per day, when the newest
-     batch is no longer waiting for generation).
+   - `prompts` → "Prompts run" (offered from 06:00, once per day, when the newest batch
+     is no longer waiting for generation). The evening run does it only if the morning
+     run missed.
+   - On Mondays (or when `research` ran): after the brief is saved, also run the **weekly
+     report** (skill `weekly-research`, section 5) and send it to Nathan.
 5. Message Nathan only when something changed or needs him (prompts ready, QC summary,
    "Submit this batch?", CAPTCHA, a failure). Never send "nothing to do" messages.
 
@@ -44,7 +50,9 @@ Device base = `config.device.base`. Workspace = `$MSP_WORKSPACE`.
 ## 0. Start (both runs)
 1. Setup per CLAUDE.md; `python -m pytest -q` must pass.
 2. Stage `<base>\_state\RUN.lock` if it exists. If it says `state=active` and its mtime
-   is < 3 h ago → stop: "another run is active". Else commit `RUN.lock` with
+   is < 90 min ago → stop: "another run is active". Older than 90 min, or any mtime with
+   no state change in `_state\C*.json` since → it is stale (a run died without releasing
+   it): take over and say so in the summary. Else commit `RUN.lock` with
    `state=active`, run type and UTC time (files cannot be deleted from here, so the
    lock is released by overwriting it with `state=done`).
 3. **Component check (before any work).** Confirm the repo agents `visual-qc` and
@@ -59,6 +67,8 @@ Device base = `config.device.base`. Workspace = `$MSP_WORKSPACE`.
 4. Stage every `C*.json` from the device into `$MSP_WORKSPACE/_state/` and every
    `<base>\_research\RESEARCH_*.json` into `$MSP_WORKSPACE/_research/` (device wins).
 5. `msp status --n N` for every batch that is not terminal; finish older batches first (e.g. assets still `queued` or `fields_configured`).
+6. **Every exit path releases the lock** (`state=done`), including "silent", "PC unreachable"
+   and errors. A run that cannot release it must say so in its last message.
 
 ## Prompts run
 skill `microstock-prompts` → commit outputs → message Nathan: project name, sheet path,

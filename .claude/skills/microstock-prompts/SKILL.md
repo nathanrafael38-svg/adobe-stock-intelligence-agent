@@ -39,3 +39,17 @@ Save as `$MSP_WORKSPACE/plan_C{N}.json`, run `python -m msp validate-plan`, fix 
 error, then `python -m msp init --n N --plan ...` and commit the three files it lists.
 Send Nathan the Excel prompt sheet `Day N\PROMPTS_C{N}.xlsx` (attach it with SendUserFile) and the Flow project name `C-Day N`,
 with the reminder to pick model **Nano Banana Pro** in the Flow composer before generating (Flow defaults to Nano Banana 2 Lite).
+
+## Lessons from QC (C184: 8 of 20 rejected; C185 with Nano Banana Pro: 1 of 20)
+Every line below comes from a real reject; apply them when writing prompts.
+- Objects with mechanics break: shoe laces, trowels and tools, bicycle chains/drivetrains,
+  whole roasted poultry, candle bases. Prefer simple solid objects or hide the mechanism.
+- Anything with a surface for text or a badge gets pseudo-text or a logo (bicycle tubes,
+  labels, book spines, bottles). Say "plain, unlabeled" and avoid books and signs.
+- Plain furniture with a distinctive silhouette can look like a commercial design
+  (a slab-headboard oak bed was rejected as brand-like). Avoid named-style furniture.
+- Illustration backgrounds: ask for "pure flat white background with no paper texture, no
+  shadow and no splatter". Without it we got paper grain, spatter and a pink halo.
+- Dark moody food photos got smeared backgrounds (ramen). Prefer bright, clean light.
+- Compare against `msp validate-plan` early: concepts that share two subject words with
+  history are rejected, so change the subject word, not just the setting.

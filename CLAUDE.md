@@ -33,7 +33,7 @@ Prompt generation, metadata writing, CSV, embedding, queueing and **submission**
 by you with skills + CLI — they need no separate agent. Run `python -m msp doctor` at the
 start of every run (daily-run step 3); never do an agent's job yourself if it is missing.
 
-## Daily run (scheduled hourly 06:17–23:17 Asia/Jakarta; `msp due` decides the work)
+## Daily run (scheduled twice a day, ~07:07 and ~19:07 Asia/Jakarta; `msp due` decides the work)
 Follow skill `daily-run` exactly. Short form:
 1. Evening (prompts run): `microstock-prompts` → `msp init` → commit plan, state, Excel prompt sheet (`PROMPTS_C{N}.xlsx`).
 2. Morning (process run): stage state → `browser-operator` (mode=download) → `msp ingest`
@@ -43,6 +43,16 @@ Follow skill `daily-run` exactly. Short form:
    → ask "Submit this batch?" → on "ya": `msp approve` → **you** submit (skill `adobe-portal-submit`;
    Terms consent and CAPTCHA need Nathan, which a subagent cannot ask for).
 3. Always finish with `msp status` + `msp qc-report`, commit state, and a short summary.
+4. Weekly (Monday run, or when the newest brief is older than 8 days): market research →
+   `msp weekly-stats` → **weekly report + evaluation + next-week actions** for Nathan
+   (skill `weekly-research`, section 5).
+
+There is no hourly run (it cost too many weekly tokens). Between the two runs, Nathan
+can start any stage by telling the orchestrator in chat (e.g. "sudah generate").
+
+**Standing instruction from Nathan (2026-10-28): repository changes that this pipeline
+needs are merged without asking him** (open the PR, make sure tests pass, merge it).
+This covers this repo only, and never covers submitting to Adobe.
 
 ## Setup in a fresh session
 ```

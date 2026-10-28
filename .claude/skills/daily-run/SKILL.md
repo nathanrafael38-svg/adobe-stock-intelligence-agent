@@ -4,12 +4,14 @@ description: Orchestrator runbook for the C-Day N microstock pipeline - stage or
 ---
 # Daily run (orchestrator)
 
-Verified end-to-end on C183–C185. One state machine, run **twice a day** (~07:07 and ~19:07
-WIB) by the scheduled task "Microstock daily run" (the hourly run was removed on 2026-10-28:
+Verified end-to-end on C183–C185. One state machine, run **once a day at 06:30 WIB** by the
+scheduled task "Microstock daily run" (hourly and twice-daily runs were removed on 2026-10-28:
 too many weekly tokens). Nathan can also start any stage in chat ("sudah generate").
-Typical day: morning run = research (Mondays) + prompts for today's C-Day; evening run =
-download/QC/metadata/queue what Nathan generated, reconcile the 09:30 upload, prepare the
-portal and ask "Submit this batch?". Each run decides its own work:
+One run does all pending work in this order: research (Mondays) → process what Nathan
+generated since the last run → reconcile the previous 09:30 upload and prepare the portal →
+prompts for the next C-Day. **Submission is manual by Nathan** (Terms + CAPTCHA): the run
+only tells him the batch is ready. After processing a batch, re-run `msp due` once: the
+batch no longer blocks `prompts`. Each run decides its own work:
 
 ## Scheduled mode (do this right after "0. Start")
 1. `python -m msp due --now "<PC local time ISO, +07:00>"` on the staged states.
@@ -19,13 +21,12 @@ portal and ask "Submit this batch?". Each run decides its own work:
    - `process` → "Process run" for that batch from the first step its assets need.
    - `check_flow` → open Flow project `C-Day N`; if tiles exist, "Process run" step A
      onward; if none yet, do nothing and stay silent (Nathan has not generated).
-   - `ask_submit` → step J for that batch, then `msp checkpoint --n N` (no re-ask for 12 h).
+   - `ask_submit` → in a scheduled run do not ask for submission: tell Nathan the batch is ready and he submits manually, then `msp checkpoint --n N` (no re-notice for 12 h). In chat, on his request, step J applies.
    - `research` → spawn agent `market-researcher` (skill `weekly-research`); store its brief
      with `msp research-save` and commit it to `<base>\_research\`; send Nathan the summary.
      Runs before `prompts`, so tonight's prompts already use it.
    - `prompts` → "Prompts run" (offered from 06:00, once per day, when the newest batch
-     is no longer waiting for generation). The evening run does it only if the morning
-     run missed.
+     is no longer waiting for generation). 
    - On Mondays (or when `research` ran): after the brief is saved, also run the **weekly
      report** (skill `weekly-research`, section 5) and send it to Nathan.
 5. Message Nathan only when something changed or needs him (prompts ready, QC summary,

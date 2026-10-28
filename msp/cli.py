@@ -299,10 +299,19 @@ def cmd_mark(a, cfg):
     _out(b.summary())
 
 
+APPROVAL_WORDS = {"ya", "yes", "submit", "ya submit", "kirim", "ok submit", "boleh", "boleh submit", "boleh submit aja",
+                  "silakan submit", "oke submit"}
+
+
+def is_explicit_yes(text: str) -> bool:
+    """Exact-match gate for 'Submit this batch?'. Anything ambiguous ('nanti', 'jangan submit') is not a yes."""
+    return text.strip().lower() in APPROVAL_WORDS
+
+
 def cmd_approve(a, cfg):
     """Record Nathan's explicit 'Submit this batch?' answer for all fields_configured assets."""
     b = _batch(cfg, a.n)
-    if a.text.strip().lower() not in {"ya", "yes", "submit", "ya submit", "kirim", "ok submit"}:
+    if not is_explicit_yes(a.text):
         raise StateError(f"approval text {a.text!r} is not an explicit yes; nothing recorded")
     ks = [x["k"] for x in b.in_status("fields_configured")]
     if not ks:

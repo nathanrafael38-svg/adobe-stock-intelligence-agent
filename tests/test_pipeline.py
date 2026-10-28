@@ -284,3 +284,11 @@ def test_research_save_requires_evidence(ws, tmp_path):
     assert cli.main(["research-save", "--file", str(f)]) == 0
     p, brief = cli.latest_research()
     assert p.name == "RESEARCH_2026-11-02.json" and brief["period"] == "w45"
+
+
+def test_approval_gate_accepts_explicit_yes_only():
+    from msp.cli import is_explicit_yes
+    for ok in ("ya", " Ya Submit ", "boleh submit aja", "KIRIM"):
+        assert is_explicit_yes(ok)
+    for bad in ("nanti dulu", "jangan submit", "mungkin", "submit nanti", ""):
+        assert not is_explicit_yes(bad)

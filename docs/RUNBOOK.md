@@ -4,11 +4,11 @@
 | time | what | who |
 |---|---|---|
 | PC on, logon | Claude desktop + Edge open by themselves (`autostart.bat` in Startup) | Windows |
-| ~07:07 and ~19:07 | "Microstock daily run": `msp due` decides — weekly research and report (Mondays), prompts for today's C-Day, process batches Nathan has generated, reconcile uploads, prepare portal fields, ask "Submit this batch?" (max once per 12 h). Silent when nothing to do. | Claude scheduled task |
-| whenever you like (morning) | generate x1 per prompt in Flow project `C-Day N` (microstock account) | Nathan |
+| 06:30 | "Microstock daily run" (once a day): `msp due` decides — weekly research and report (Mondays), process batches Nathan generated, reconcile uploads, prepare portal fields and tell Nathan the batch is ready (he submits manually), then prompts for the next C-Day. Silent when nothing to do. | Claude scheduled task |
+| any time after the run | generate x1 per prompt in Flow project `C-Day N` (microstock account) | Nathan |
 | every 15 min | `adobe_upload.bat` uploads the queue | Windows task (after `setup_tasks.bat`) |
 | every 15 min | `upscale_watch.bat` (only does work when files are queued) | Windows task "Microstock Upscale Watch" |
-| when convenient | reply **ya** in that conversation; solve the Adobe CAPTCHA in Edge if it appears | Nathan |
+| when convenient | submit the prepared batch in the Adobe portal yourself (Terms + CAPTCHA) | Nathan |
 
 **One click:** open the scheduled task "Microstock daily run" in Claude → *Run now*, or just tell Claude in chat "sudah generate".
 It resumes from state, so running it twice is safe.

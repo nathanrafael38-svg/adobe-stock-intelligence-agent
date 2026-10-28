@@ -322,7 +322,7 @@ def cmd_approve(a, cfg):
     _out({"approved": ks})
 
 
-# ---------------- scheduling (two runs a day) ----------------
+# ---------------- scheduling (one run a day, 06:30 WIB) ----------------
 PROCESS_STATUSES = {"downloaded", "upscale_pending", "qc_review", "qc_passed", "metadata_validated",
                     "metadata_embedded", "queued", "sftp_uploaded", "submit_approved"}
 CHECKPOINT_QUIET_HOURS = 12
@@ -331,7 +331,7 @@ STALE_BATCH_DAYS = 2
 
 
 def due(states: list[dict], now_local, tz_offset_hours: int = 7, last_research=None) -> dict:
-    """Decide what a scheduled run (morning ~07:07 / evening ~19:07 WIB) must do. Pure function of batch states and local time.
+    """Decide what a scheduled run (daily 06:30 WIB) must do. Pure function of batch states and local time.
 
     Returns {"actions": [...], "skip_stale": [{batch, ks}], "silent": bool}.
     actions: ("process", batch) | ("check_flow", batch) | ("ask_submit", batch) | ("prompts",) | ("research",)

@@ -304,3 +304,11 @@ def test_weekly_stats_counts_and_reasons():
     assert b["generated"] == 2 and b["qc_rejected"] == 1 and b["qc_reject_rate"] == 0.5
     assert b["reject_reasons"][0]["reason"] == "extra fingers"
     assert r["totals"]["submitted"] == 1
+
+
+def test_approval_gate_accepts_explicit_yes_only():
+    from msp.cli import is_explicit_yes
+    for ok in ("ya", " Ya Submit ", "boleh submit aja", "KIRIM"):
+        assert is_explicit_yes(ok)
+    for bad in ("nanti dulu", "jangan submit", "mungkin", "submit nanti", ""):
+        assert not is_explicit_yes(bad)

@@ -21,6 +21,12 @@ processing can take minutes). Nathan logs in himself; if a login/2FA/CAPTCHA app
 2. For each file: check the title and keyword count the portal read from IPTC
    (`title_seen`, `keywords_seen_count`); set Category from input; set the AI label;
    set fictional per input. Save/close without submitting.
+   **File type is set explicitly, never left to auto-detect.** The portal guesses
+   Photos/Illustrations from the pixels and gets watercolor illustrations wrong (seen on
+   C186_01, C187_02..04). Input carries `file_type` from the plan asset type
+   (`illustration` → Illustrations, `photo` → Photos); read `select[name=contentType]`,
+   set it if it differs, Save, then re-check category, AI label and the Recognizable
+   people answer (a type change can reset them). Report `type_before`/`type_after`.
 3. If a file is missing in Uploads → `{filename, error: "not in portal yet"}`.
 4. Screenshot the list showing the files ready; report.
 

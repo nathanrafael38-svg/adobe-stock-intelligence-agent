@@ -29,6 +29,16 @@ def parse_winscp_log(text: str) -> list[dict]:
     return out
 
 
+def _norm_ts(ts: str) -> str:
+    """'2026-10-28T07:45:41+07:00' / '...T...' / '... ...' -> 'YYYY-MM-DD HH:MM:SS' (PC local)."""
+    ts = (ts or "").strip().replace("T", " ")
+    for sep in ("+", "Z"):
+        i = ts.find(sep, 11)
+        if i != -1:
+            ts = ts[:i]
+    return ts[:19]
+
+
 def reconcile(batch, log_text: str) -> list[dict]:
     """Mark queued assets as sftp_uploaded when the log shows a transfer of the
     same filename with the same byte count AFTER they were queued.
@@ -40,8 +50,8 @@ def reconcile(batch, log_text: str) -> list[dict]:
     changes = []
     for a in batch.in_status("queued"):
         q = next(h for h in reversed(a["history"]) if h["status"] == "queued")["evidence"]
-        queued_at = q.get("queued_local_ts", "")  # 'YYYY-MM-DD HH:MM:SS' local PC time
-        hits = [t for t in transfers if t["name"] == a["filename"] and t["ts"] >= queued_at]
+        queued_at = _norm_ts(q.get("queued_local_ts", ""))  # 'YYYY-MM-DD HH:MM:SS' local PC time
+        hits = [t for t in transfers if t["name"] == a["filename"] and t["ts"][:19] >= queued_at]
         if not hits:
             continue
         t = hits[-1]

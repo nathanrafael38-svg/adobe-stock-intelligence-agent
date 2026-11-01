@@ -312,3 +312,16 @@ def test_approval_gate_accepts_explicit_yes_only():
         assert is_explicit_yes(ok)
     for bad in ("nanti dulu", "jangan submit", "mungkin", "submit nanti", ""):
         assert not is_explicit_yes(bad)
+
+
+def test_vecteezy_title_rules_and_csv(tmp_path):
+    md = {**GOOD_MD, "vz_title": "Gold sparkles in an arc"}
+    errs, warns = M.validate(md, CFG)
+    assert not any("vz_title" in e for e in errs)
+    errs, _ = M.validate({**GOOD_MD, "vz_title": "one two three four five six seven eight nine"}, CFG)
+    assert any("vz_title" in e for e in errs)
+    errs, _ = M.validate({**GOOD_MD, "vz_title": "Sparkles & stars"}, CFG)
+    assert any("allow" in e for e in errs)
+    M.write_vecteezy_csv(tmp_path / "v.csv", [md], CFG)
+    rows = list(__import__("csv").reader(open(tmp_path / "v.csv")))
+    assert rows[1][1] == "Gold sparkles in an arc" and rows[1][-1] == "pro"

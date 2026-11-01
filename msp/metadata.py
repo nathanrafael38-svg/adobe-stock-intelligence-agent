@@ -50,6 +50,15 @@ def validate(md: dict, cfg: dict) -> tuple[list[str], list[str]]:
     desc = md.get("description", "") or ""
     if not desc:
         warnings.append("description empty (Vecteezy field)")
+    vz = md.get("vz_title")
+    if vz is None:
+        warnings.append("vz_title missing: Vecteezy CSV falls back to the Adobe title (Vecteezy wants 3-8 words)")
+    else:
+        n = len(vz.split())
+        if not (v["title_words_min"] <= n <= v["title_words_max"]):
+            errors.append(f"vz_title has {n} words, Vecteezy wants {v['title_words_min']}-{v['title_words_max']}")
+        if not re.match(v["title_allowed_regex"], vz):
+            errors.append("vz_title has characters Vecteezy does not allow (only letters, digits, . , - ')")
     kws = md.get("keywords") or []
     if kws != clean_keywords(kws):
         errors.append("keywords not normalised/deduplicated (run clean_keywords)")
@@ -167,8 +176,8 @@ def write_vecteezy_csv(path: Path, rows: list[dict], cfg: dict) -> None:
         w = csv.writer(f, quoting=csv.QUOTE_ALL)
         w.writerow(cols)
         for md in rows:
-            w.writerow([md["filename"], md["title"], md.get("description", ""),
-                        ", ".join(md["keywords"][: cfg["vecteezy"]["keywords_max"]])])
+            w.writerow([md["filename"], md.get("vz_title") or md["title"], md.get("description", ""),
+                        ", ".join(md["keywords"][: cfg["vecteezy"]["keywords_max"]]), cfg["vecteezy"]["license"]])
 
 
 def validate_csv(path: Path, expected_cols: list[str], filenames: list[str]) -> list[str]:

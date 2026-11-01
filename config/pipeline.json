@@ -55,7 +55,11 @@
   "vecteezy": {
     "keywords_min": 5,
     "keywords_max": 30,
-    "csv_columns": ["Filename", "Title", "Description", "Keywords"]
+    "title_words_min": 3,
+    "title_words_max": 8,
+    "title_allowed_regex": "^[A-Za-z0-9 .,'-]+$",
+    "license": "pro",
+    "csv_columns": ["Filename", "Title", "Description", "Keywords", "License"]
   },
   "metadata": {
     "keyword_max_bytes": 64,

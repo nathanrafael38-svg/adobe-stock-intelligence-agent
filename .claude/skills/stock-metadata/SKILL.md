@@ -9,7 +9,7 @@ describe what is visible, not what the prompt hoped for.
 
 ## Output file `$MSP_WORKSPACE/md_C{N}.json`
 ```json
-{"1": {"title": "...", "description": "...", "keywords": ["...", "..."], "category": 7}}
+{"1": {"title": "...", "vz_title": "...", "description": "...", "keywords": ["...", "..."], "category": 7}}
 ```
 
 ## Verified limits (Adobe help "CSV requirements", Vecteezy keywording tips, Oct 2026)
@@ -21,6 +21,12 @@ describe what is visible, not what the prompt hoped for.
   subject's category (Food, Plants…), 8 Graphic Resources only for patterns/elements.
 - Never: artist names, brands, real people, characters, "AI generated", model/tool names,
   resolution words (4k, 8k, HD), keyword stuffing, words for things not in the image.
+
+- Vecteezy title (`vz_title`): **3-8 words**, max 200 chars, only letters, digits, `. , - '`, unique across the
+  portfolio. Write it separately from the Adobe title (the Adobe title is usually 8-13 words). Missing
+  `vz_title` is a warning and the CSV falls back to the Adobe title, which Vecteezy may reject.
+- Vecteezy CSV columns: `Filename,Title,Description,Keywords,License` (License `pro` from config). Extensions in
+  `Filename` are optional for web Add Data, must be omitted for FTP/SFTP. AI-Generated is ticked in Add Data, not in the CSV.
 
 ## Style
 - Title: subject + key attribute + style/setting, 40–70 chars, natural English.

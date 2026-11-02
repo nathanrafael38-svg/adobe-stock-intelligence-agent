@@ -38,3 +38,10 @@ Then run `msp metadata --file`, fix all errors, `msp embed`, `msp csv`.
 IPTC/XMP written: ObjectName(≤64)/Headline/dc:title = title; Caption/dc:description =
 description; Keywords/dc:subject = keywords. Which field Adobe shows as "Title" is
 verified on the portal during `prepare` (title_seen) — report any mismatch.
+
+## Vecteezy CSV import (verified on C183–C188)
+- Vecteezy drops underscores from uploaded file names (`C189_01.jpg` → `C18901.jpg`); `msp csv` writes the Filename
+  column that way (`vecteezy.csv_filename_remove_chars`). A CSV with `C189_01` matched no row and the embedded IPTC
+  title/keywords were used instead. Re-check on the first import after this change.
+- Keywords must be ASCII (no ü, é…): the validator now rejects them.
+- Illustrations are not uploaded to Vecteezy (photos and real vectors only).

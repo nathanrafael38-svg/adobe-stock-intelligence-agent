@@ -59,6 +59,7 @@
     "title_words_max": 8,
     "title_allowed_regex": "^[A-Za-z0-9 .,'-]+$",
     "license": "pro",
+    "csv_filename_remove_chars": "_",
     "csv_columns": ["Filename", "Title", "Description", "Keywords", "License"]
   },
   "metadata": {

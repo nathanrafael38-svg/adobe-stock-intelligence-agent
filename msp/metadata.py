@@ -71,6 +71,8 @@ def validate(md: dict, cfg: dict) -> tuple[list[str], list[str]]:
             errors.append(f"keyword too long for IPTC: {k!r}")
         if "," in k:
             errors.append(f"keyword contains comma: {k!r}")
+        if not k.isascii():
+            errors.append(f"keyword has non-ASCII characters (Vecteezy rejects them): {k!r}")
     text = " ".join([title, desc, " ".join(kws)]).lower()
     for b in g["banned_terms"]:
         if re.search(rf"\b{re.escape(b)}\b", text):
@@ -169,6 +171,14 @@ def write_adobe_csv(path: Path, rows: list[dict], cfg: dict) -> None:
                         str(md["category"]), md.get("releases", "")])
 
 
+def vz_filename(name: str, cfg: dict) -> str:
+    """Vecteezy stores uploads without the characters in csv_filename_remove_chars (C189_01.jpg -> C18901.jpg),
+    so the CSV Filename must be written that way or no row matches (seen on the C183-C188 import)."""
+    for ch in cfg["vecteezy"].get("csv_filename_remove_chars", ""):
+        name = name.replace(ch, "")
+    return name
+
+
 def write_vecteezy_csv(path: Path, rows: list[dict], cfg: dict) -> None:
     cols = cfg["vecteezy"]["csv_columns"]
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -176,7 +186,7 @@ def write_vecteezy_csv(path: Path, rows: list[dict], cfg: dict) -> None:
         w = csv.writer(f, quoting=csv.QUOTE_ALL)
         w.writerow(cols)
         for md in rows:
-            w.writerow([md["filename"], md.get("vz_title") or md["title"], md.get("description", ""),
+            w.writerow([vz_filename(md["filename"], cfg), md.get("vz_title") or md["title"], md.get("description", ""),
                         ", ".join(md["keywords"][: cfg["vecteezy"]["keywords_max"]]), cfg["vecteezy"]["license"]])
 
 

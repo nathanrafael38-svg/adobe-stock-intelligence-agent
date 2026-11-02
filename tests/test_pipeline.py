@@ -143,7 +143,7 @@ def test_csv_roundtrip(tmp_path):
     M.write_adobe_csv(tmp_path / "a.csv", [GOOD_MD], CFG)
     M.write_vecteezy_csv(tmp_path / "v.csv", [GOOD_MD], CFG)
     assert M.validate_csv(tmp_path / "a.csv", CFG["adobe"]["csv_columns"], ["C1_01.jpg"]) == []
-    assert M.validate_csv(tmp_path / "v.csv", CFG["vecteezy"]["csv_columns"], ["C1_01.jpg"]) == []
+    assert M.validate_csv(tmp_path / "v.csv", CFG["vecteezy"]["csv_columns"], ["C101.jpg"]) == []
 
 
 # ---------------- upload reconcile ----------------
@@ -325,3 +325,12 @@ def test_vecteezy_title_rules_and_csv(tmp_path):
     M.write_vecteezy_csv(tmp_path / "v.csv", [md], CFG)
     rows = list(__import__("csv").reader(open(tmp_path / "v.csv")))
     assert rows[1][1] == "Gold sparkles in an arc" and rows[1][-1] == "pro"
+
+
+def test_vecteezy_filename_and_ascii_keywords(tmp_path):
+    assert M.vz_filename("C189_01.jpg", CFG) == "C18901.jpg"
+    M.write_vecteezy_csv(tmp_path / "v.csv", [GOOD_MD], CFG)
+    assert M.validate_csv(tmp_path / "v.csv", CFG["vecteezy"]["csv_columns"], [M.vz_filename(GOOD_MD["filename"], CFG)]) == []
+    md = dict(GOOD_MD, keywords=GOOD_MD["keywords"][:-1] + ["gl\u00fchwein"])
+    errs, _ = M.validate(md, CFG)
+    assert any("non-ASCII" in e for e in errs)

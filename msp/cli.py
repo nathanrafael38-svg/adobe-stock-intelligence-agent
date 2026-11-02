@@ -203,7 +203,7 @@ def cmd_csv(a, cfg):
     M.write_adobe_csv(ad, rows, cfg)
     M.write_vecteezy_csv(ve, rows, cfg)
     fns = [r["filename"] for r in rows]
-    errs = M.validate_csv(ad, cfg["adobe"]["csv_columns"], fns) + M.validate_csv(ve, cfg["vecteezy"]["csv_columns"], fns)
+    errs = M.validate_csv(ad, cfg["adobe"]["csv_columns"], fns) + M.validate_csv(ve, cfg["vecteezy"]["csv_columns"], [M.vz_filename(f, cfg) for f in fns])
     b.log("csv", rows=len(rows), errors=errs)
     _out({"rows": len(rows), "errors": errs, "commit": [
         {"local": str(ad), "device": C.device_path(cfg, C.day_dir(cfg, a.n), "Metadata", ad.name)},

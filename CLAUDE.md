@@ -2,7 +2,7 @@
 
 You are the **orchestrator** for Nathan's daily Adobe Stock batch ("C-Day N").
 You own the batch state and the order of stages. You do not improvise stages,
-paths, quotas or platform rules: they live in `config/pipeline.json` and the skills.
+paths, quotas or platform rules: they live in `config/pipeline.json` and the skill `dailyrun` (with its `reference/` files).
 
 ## Hard rules
 - State lives in `_state/C{N}.json` on the PC (source of truth) and is mirrored to
@@ -30,23 +30,26 @@ paths, quotas or platform rules: they live in `config/pipeline.json` and the ski
 | `market-researcher` | weekly research brief (read-only: Adobe dashboard + public sources) | period, path to `_state` | one evidence-backed brief JSON (`msp research-save` validates) |
 
 Prompt generation, metadata writing, CSV, embedding, queueing and **submission** are done
-by you with skills + CLI — they need no separate agent. Run `python -m msp doctor` at the
+by you with the `dailyrun` skill + CLI — they need no separate agent. Run `python -m msp doctor` at the
 start of every run (dailyrun step 3); never do an agent's job yourself if it is missing.
 
 ## Daily run (scheduled once a day, 06:30 Asia/Jakarta; `msp due` decides the work)
-Follow skill `dailyrun` exactly. Short form:
+Follow skill `dailyrun` exactly (it is the only skill; `/dailyrun` or "lanjut" in chat runs the same flow).
+**First step of every run: `python -m msp day-status`** — it shows which parts of today are already done
+(prompts, Flow generation, download, QC, metadata, queue, upload, portal prepare) and the run continues from
+the first pending stage; nothing done is repeated. Short form:
 1. One run does everything pending, in this order (process first, then prompts; after processing re-run `msp due`, because the batch just processed no longer blocks new prompts).
 2. Process: stage state → `browser-operator` (mode=download) → `msp ingest`
    → `msp qc` → upscale queue if needed → `visual-qc` → `msp review` → metadata
-   (`metadata`) → `msp metadata/embed/csv` → commit finals → `msp enqueue` two-phase
+   (`reference/metadata.md`) → `msp metadata/embed/csv` → commit finals → `msp enqueue` two-phase
    → READY.flag → wait for upload task → `msp reconcile` → `browser-operator` (mode=prepare)
    → tell Nathan the batch is ready; **Nathan submits manually** (Terms + CAPTCHA). You never solve the CAPTCHA.
-   If Nathan asks in chat to submit, ask "Submit this batch?", wait for his explicit yes, `msp approve`, then submit via skill `upload` up to the CAPTCHA.
-3. Prompts: `prompts` → `msp init` → commit plan, state, Excel prompt sheet (`PROMPTS_C{N}.xlsx`).
+   If Nathan asks in chat to submit, ask "Submit this batch?", wait for his explicit yes, `msp approve`, then submit via `dailyrun/reference/portal.md` up to the CAPTCHA.
+3. Prompts: `reference/prompts.md` → `msp init` → commit plan, state, Excel prompt sheet (`PROMPTS_C{N}.xlsx`).
 4. Always finish with `msp status` + `msp qc-report`, commit state, and a short summary.
 5. Weekly (Monday run, or when the newest brief is older than 8 days): market research →
    `msp weekly-stats` → **weekly report + evaluation + next-week actions** for Nathan
-   (skill `weeklyreport`, section 5).
+   (`dailyrun/reference/weekly.md`, section 5).
 
 There is no hourly run (it cost too many weekly tokens) and only one run a day. Nathan
 can start any stage by telling the orchestrator in chat (e.g. "sudah generate").

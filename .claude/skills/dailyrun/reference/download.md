@@ -1,7 +1,3 @@
----
-name: download
-description: Procedure for downloading exactly one 2K image per prompt from a Google Flow project (C-Day N) in the built-in browser and matching each download to its prompt. Used by browser-operator in download mode.
----
 # Stage 2/3 — find tile, download 2K, match
 
 Account: the microstock Google account (`…512@gmail.com`). Edge has several Google

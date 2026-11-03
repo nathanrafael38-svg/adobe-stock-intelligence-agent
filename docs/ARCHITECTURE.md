@@ -37,10 +37,11 @@ Credentials never leave the PC.
 | Orchestrator | main session | owns state, ordering, approvals; one per run |
 | browser-operator | **agent** | distinct tools (signed-in browser) and risky actions (submit); screenshot-heavy context kept out of the orchestrator |
 | visual-qc | **agent** | must be independent of the prompt/metadata writer (no self-grading); image-heavy context |
-| prompts, metadata | skills | text generation with rules; no independent context needed |
-| download, upload | skills | procedures loaded by browser-operator |
-| qc | skill | checklist loaded by visual-qc |
-| dailyrun | skill | orchestrator runbook |
+| dailyrun | skill (only one) | orchestrator runbook: detects what is done today (`msp day-status`) and resumes |
+| dailyrun/reference/prompts.md, metadata.md | reference files | text generation with rules; read by the orchestrator |
+| dailyrun/reference/download.md, portal.md | reference files | procedures read by browser-operator |
+| dailyrun/reference/qc.md | reference file | checklist read by visual-qc |
+| dailyrun/reference/weekly.md | reference file | research brief + weekly report |
 | tech QC, embed, CSV, queue, reconcile | scripts (`msp`) | deterministic, testable |
 | upload, upscale | existing/added .bat | must run on the PC |
 

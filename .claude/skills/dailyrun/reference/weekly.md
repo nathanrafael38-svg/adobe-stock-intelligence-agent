@@ -1,7 +1,3 @@
----
-name: weeklyreport
-description: Procedure for the weekly Adobe Stock research brief - read Nathan's contributor dashboard (sales, downloads, rejections) and public seasonal/trend sources, then produce an evidence-backed brief that prompts uses for the next week. Used by the market-researcher agent.
----
 # Weekly research
 
 Goal: tell next week's prompt generation **what to make more of, what to stop, and why**,
@@ -53,7 +49,7 @@ subjects, not the counts. Hypotheses are allowed only when labelled.
 Save the agent's JSON to `$MSP_WORKSPACE/research.json` → `python -m msp research-save
 --file …` (rejects briefs without evidence) → commit the file it prints to
 `<base>\_research\` → send Nathan the `summary_for_nathan` plus the top 3 priorities.
-`prompts` reads it with `python -m msp research-brief`.
+`reference/prompts.md` reads it with `python -m msp research-brief`.
 
 ## 5. Weekly report + evaluation (orchestrator, same run)
 Nathan wants one report per week with an honest evaluation and what to do next week.

@@ -13,7 +13,7 @@
     "downloads_dir": "%USERPROFILE%\\Downloads"
   },
   "flow": {
-    "account_hint": "microstock Google account (see skill flow-download)",
+    "account_hint": "microstock Google account (see skill download)",
     "project_pattern": "C-Day {n}",
     "model": "Nano Banana Pro",
     "outputs_per_prompt": 1,

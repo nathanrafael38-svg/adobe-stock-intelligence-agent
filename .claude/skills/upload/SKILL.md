@@ -1,5 +1,5 @@
 ---
-name: adobe-portal-submit
+name: upload
 description: Prepare and (only after explicit batch approval) submit SFTP-uploaded files in the Adobe Stock contributor portal - category, generative-AI label, fictional people/property, title/keyword check. Used by browser-operator in prepare/submit modes.
 ---
 # Stage 6b — Adobe portal

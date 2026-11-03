@@ -1,5 +1,5 @@
 ---
-name: stock-metadata
+name: metadata
 description: Write Adobe Stock and Vecteezy metadata (title, description, keywords, category) for approved images, in the JSON format `msp metadata` validates, following verified platform limits.
 ---
 # Stage 5 — metadata

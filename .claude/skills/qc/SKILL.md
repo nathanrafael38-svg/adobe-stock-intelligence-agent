@@ -1,5 +1,5 @@
 ---
-name: qc-rubric
+name: qc
 description: Visual QC rubric for AI-generated microstock images (illustrations and photos) - hard defects, review triggers, and required crops. Used by the visual-qc agent.
 ---
 # Visual QC rubric

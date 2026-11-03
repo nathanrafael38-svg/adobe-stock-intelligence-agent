@@ -400,7 +400,7 @@ def latest_research():
 
 
 def cmd_research_brief(a, cfg):
-    """Print the newest research brief (used by microstock-prompts)."""
+    """Print the newest research brief (used by prompts)."""
     p, brief = latest_research()
     _out({"path": str(p) if p else None, "brief": brief})
 
@@ -502,8 +502,8 @@ def cmd_checkpoint(a, cfg):
 
 # ---------------- component check ----------------
 REQUIRED_AGENTS = ["visual-qc", "browser-operator", "market-researcher"]
-REQUIRED_SKILLS = ["daily-run", "microstock-prompts", "flow-download", "qc-rubric", "stock-metadata", "weekly-research",
-                   "adobe-portal-submit"]
+REQUIRED_SKILLS = ["dailyrun", "prompts", "download", "qc", "metadata", "weeklyreport",
+                   "upload"]
 
 
 def _frontmatter_name(path: Path) -> str | None:
@@ -523,7 +523,7 @@ def cmd_doctor(a, cfg):
     """Verify the agent and skill files the orchestrator depends on exist and are well-formed.
 
     This only checks the repo files. Whether the session registered them as Agent types /
-    skills must be checked by the orchestrator in its own context (see daily-run step 3).
+    skills must be checked by the orchestrator in its own context (see dailyrun step 3).
     """
     import shutil as _sh
     root = C.REPO / ".claude"

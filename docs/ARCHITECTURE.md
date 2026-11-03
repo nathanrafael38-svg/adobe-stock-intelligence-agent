@@ -20,7 +20,7 @@
 ```
  Claude scheduled task (cloud, linked to PC)                  Windows Task Scheduler (PC)
  ┌───────────────────────────────────────────┐               ┌──────────────────────────┐
- │ Orchestrator  (CLAUDE.md + skill daily-run)│  files via    │ adobe_upload.bat  (SFTP)  │
+ │ Orchestrator  (CLAUDE.md + skill dailyrun)│  files via    │ adobe_upload.bat  (SFTP)  │
  │  ├─ msp CLI (python, exiftool) in cloud    │ device bridge │ upscale_watch.bat (Upscayl│
  │  ├─ agent browser-operator (built-in       │◄─────────────►│        GPU, on demand)    │
  │  │    browser on PC: Flow, Adobe portal)   │               └──────────────────────────┘
@@ -37,10 +37,10 @@ Credentials never leave the PC.
 | Orchestrator | main session | owns state, ordering, approvals; one per run |
 | browser-operator | **agent** | distinct tools (signed-in browser) and risky actions (submit); screenshot-heavy context kept out of the orchestrator |
 | visual-qc | **agent** | must be independent of the prompt/metadata writer (no self-grading); image-heavy context |
-| microstock-prompts, stock-metadata | skills | text generation with rules; no independent context needed |
-| flow-download, adobe-portal-submit | skills | procedures loaded by browser-operator |
-| qc-rubric | skill | checklist loaded by visual-qc |
-| daily-run | skill | orchestrator runbook |
+| prompts, metadata | skills | text generation with rules; no independent context needed |
+| download, upload | skills | procedures loaded by browser-operator |
+| qc | skill | checklist loaded by visual-qc |
+| dailyrun | skill | orchestrator runbook |
 | tech QC, embed, CSV, queue, reconcile | scripts (`msp`) | deterministic, testable |
 | upload, upscale | existing/added .bat | must run on the PC |
 

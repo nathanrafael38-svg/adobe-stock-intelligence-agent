@@ -12,12 +12,12 @@ downloads to `C:\Users\Nathan\Downloads\Buat Claude`. Load skill
 the skill for your mode.
 
 Modes (given in the task):
-- `download` → skill `flow-download`. Input: batch id, Flow project name, list of
+- `download` → skill `download`. Input: batch id, Flow project name, list of
   {k, filename, prompt}. For each k: find the tile whose prompt text matches, download
   at **2K**, auto-confirm the download dialog, locate the file in Downloads, stage it.
   Output per k: {k, tile, prompt_match: exact|differs, source_name, staged_path} or
   {k, error}. Never download more than one output per prompt. Never click Generate.
-- `prepare` → skill `adobe-portal-submit` (prepare section). Input: list of
+- `prepare` → skill `upload` (prepare section). Input: list of
   {filename, category, ai_label: true, fictional: bool}. Set fields, do NOT submit.
   Output per file: {filename, category_set, ai_label_set, fictional_set, title_seen,
   keywords_seen_count, error?} + a screenshot summary.

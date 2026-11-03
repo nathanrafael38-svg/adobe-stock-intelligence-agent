@@ -1,5 +1,5 @@
 ---
-name: microstock-prompts
+name: prompts
 description: Generate the daily C-Day N prompt plan (8 illustrations 1:1 + 12 photos 16:9) for Adobe Stock, deduplicated against history, in the plan JSON format that `msp init` validates.
 ---
 # Stage 1 — prompt plan

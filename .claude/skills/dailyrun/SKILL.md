@@ -1,5 +1,5 @@
 ---
-name: daily-run
+name: dailyrun
 description: Orchestrator runbook for the C-Day N microstock pipeline - stage order, device file protocol, locking, approvals, upscaling, recovery. Load at the start of every prompts run or process run, scheduled or manual.
 ---
 # Daily run (orchestrator)
@@ -22,13 +22,13 @@ batch no longer blocks `prompts`. Each run decides its own work:
    - `check_flow` → open Flow project `C-Day N`; if tiles exist, "Process run" step A
      onward; if none yet, do nothing and stay silent (Nathan has not generated).
    - `ask_submit` → in a scheduled run do not ask for submission: tell Nathan the batch is ready and he submits manually, then `msp checkpoint --n N` (no re-notice for 12 h). In chat, on his request, step J applies.
-   - `research` → spawn agent `market-researcher` (skill `weekly-research`); store its brief
+   - `research` → spawn agent `market-researcher` (skill `weeklyreport`); store its brief
      with `msp research-save` and commit it to `<base>\_research\`; send Nathan the summary.
      Runs before `prompts`, so tonight's prompts already use it.
    - `prompts` → "Prompts run" (offered from 06:00, once per day, when the newest batch
      is no longer waiting for generation). 
    - On Mondays (or when `research` ran): after the brief is saved, also run the **weekly
-     report** (skill `weekly-research`, section 5) and send it to Nathan.
+     report** (skill `weeklyreport`, section 5) and send it to Nathan.
 5. Message Nathan only when something changed or needs him (prompts ready, QC summary,
    "Submit this batch?", CAPTCHA, a failure). Never send "nothing to do" messages.
 
@@ -44,7 +44,7 @@ Entry points kept for manual use: **prompts run** (Stage 1) and **process run**
 - Browser: Nathan's Edge via the Claude extension (`mcp__claude-in-chrome__*`); downloads
   land in `C:\Users\Nathan\Downloads\Buat Claude`.
 - Adobe CAPTCHA: Nathan solves it. Stop, message him, then verify the In review tab.
-- Submission and Adobe's Terms attestation: follow `adobe-portal-submit` (ask Nathan).
+- Submission and Adobe's Terms attestation: follow `upload` (ask Nathan).
 
 Device base = `config.device.base`. Workspace = `$MSP_WORKSPACE`.
 
@@ -57,7 +57,7 @@ Device base = `config.device.base`. Workspace = `$MSP_WORKSPACE`.
    `state=active`, run type and UTC time (files cannot be deleted from here, so the
    lock is released by overwriting it with `state=done`).
 3. **Component check (before any work).** Confirm the repo agents `visual-qc` and
-   `browser-operator` are available as Agent types and the skill `daily-run` is loaded,
+   `browser-operator` are available as Agent types and the skill `dailyrun` is loaded,
    e.g. with `python -m msp doctor` plus the agent list in your system context.
    - Missing from the session but present in the repo → load them from files: Read
      `.claude/skills/<name>/SKILL.md` for skills; for an agent, spawn
@@ -72,7 +72,7 @@ Device base = `config.device.base`. Workspace = `$MSP_WORKSPACE`.
    and errors. A run that cannot release it must say so in its last message.
 
 ## Prompts run
-skill `microstock-prompts` → commit outputs → message Nathan: project name, sheet path,
+skill `prompts` → commit outputs → message Nathan: project name, sheet path,
 "generate x1 per prompt, check ratio per group". Release the lock (`state=done`). Done.
 
 ## Process run
@@ -84,13 +84,13 @@ For the open batch, only act on assets whose status needs the step:
 | B tech QC | you | `msp qc --n N` | state |
 | C upscale | you | for `upscale_pending`: commit the original to `_UPSCALE\in\`; the PC task `upscale_watch.bat` writes `_UPSCALE\out\C{N}_kk.jpg`; poll up to 20 min; stage it; `msp ingest` (re-ingest) then `msp qc` again (one upscale per asset max) | state |
 | D visual QC | two `visual-qc` agents in parallel (10 images each) for downloaded+non-FAIL assets | `msp review` per result, then decide every `qc_review` yourself (standing decisions) | state |
-| E metadata | you, skill `stock-metadata` | `msp metadata`, `msp embed`, `msp csv` | finals `Day N\C{N}_kk.jpg`, `Day N\Metadata\*.csv` |
+| E metadata | you, skill `metadata` | `msp metadata`, `msp embed`, `msp csv` | finals `Day N\C{N}_kk.jpg`, `Day N\Metadata\*.csv` |
 | F verify finals | you | stage `Day N\C{N}_kk.jpg` back from the PC → `msp verify-device --dir <staged Day N>` (the bridge rewrites the C2PA segment on write, so bytes change; pixels + IPTC/XMP must match; device size/sha become canonical) | state |
 | G queue | you | `msp enqueue` → commit to `_UPLOAD_QUEUE\_incoming\` → list `_incoming` to JSON → `msp enqueue --confirm listing.json --local-ts "<PC local now>"` → commit READY.flag **last** | READY.flag, state |
 | H upload | Windows task "Adobe Stock SFTP Upload" runs every 15 min (after `setup_tasks.bat`) | poll `_UPLOAD_QUEUE` until empty (≤30 min); stage `_logs\winscp.log`; `msp reconcile --log`; never run WinSCP yourself | state |
 | I prepare | `browser-operator` mode=prepare for `sftp_uploaded`; pass `file_type` per file from the asset `type` (illustration→Illustrations, photo→Photos) | per file confirmed: `msp mark --status fields_configured --evidence '{"category":..,"ai_label":true,"fictional":..,"title_seen":..}'` | state |
 | J checkpoint | you | SendUserMessage + push: table of files, titles, categories, labels, rejects → **"Submit this batch? (ya / tidak)"**, then `msp checkpoint --n N` | — |
-| K submit | **you (orchestrator), never a subagent**, only after Nathan's explicit "ya" in chat | `msp approve --text "<his words>"` → follow `adobe-portal-submit` submit section yourself: reload New tab, untick "Include in submission" on every non-batch file until the button shows exactly the batch count, verify each ticked name, Submit → ask Nathan before ticking the Terms attestation → Continue → CAPTCHA: stop and ask Nathan → verify the In review tab → `msp mark --status submitted --evidence '{"portal_evidence":"..."}'` | state |
+| K submit | **you (orchestrator), never a subagent**, only after Nathan's explicit "ya" in chat | `msp approve --text "<his words>"` → follow `upload` submit section yourself: reload New tab, untick "Include in submission" on every non-batch file until the button shows exactly the batch count, verify each ticked name, Submit → ask Nathan before ticking the Terms attestation → Continue → CAPTCHA: stop and ask Nathan → verify the In review tab → `msp mark --status submitted --evidence '{"portal_evidence":"..."}'` | state |
 
 Any answer other than an explicit yes → no submission; leave `fields_configured`.
 

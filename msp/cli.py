@@ -368,6 +368,69 @@ def due(states: list[dict], now_local, tz_offset_hours: int = 7, last_research=N
     return {"actions": actions, "skip_stale": stale, "silent": not actions and not stale}
 
 
+# Per-batch stage order used by `msp day-status`. Each stage is "done", "pending" (the orchestrator can act now),
+# or "waiting" (needs Nathan or the PC upload task). Terminal assets (rejected/skipped/failed) never block a stage.
+STAGE_RULES = [
+    ("generate", {"prompt_generated"}, "waiting"),                      # Nathan generates in Flow (check Flow first)
+    ("download", {"image_generated"}, "pending"),
+    ("qc", {"downloaded", "upscale_pending", "qc_review"}, "pending"),
+    ("metadata", {"qc_passed", "metadata_validated"}, "pending"),
+    ("embed_queue", {"metadata_embedded"}, "pending"),
+    ("upload", {"queued"}, "waiting"),                                  # PC task uploads at 09:30, then reconcile
+    ("prepare", {"sftp_uploaded"}, "pending"),
+    ("submit", {"fields_configured", "submit_approved"}, "waiting"),    # Nathan submits manually
+]
+
+
+def batch_stages(d: dict) -> dict:
+    """Stage checklist for one batch state: {"counts", "stages", "next"}; pure function of the asset statuses."""
+    from collections import Counter
+    counts = Counter(a["status"] for a in d["assets"].values())
+    stages, nxt = {}, None
+    for name, statuses, kind in STAGE_RULES:
+        n = sum(counts.get(x, 0) for x in statuses)
+        stages[name] = {"state": kind if n else "done", "assets": n}
+        if n and nxt is None:
+            nxt = name
+    attention = counts.get("failed", 0)
+    return {"batch": d["batch_id"], "counts": dict(counts), "stages": stages, "next": nxt, "failed": attention}
+
+
+def day_status(states: list[dict], now_local, tz_offset_hours: int = 7, last_research=None) -> dict:
+    """What is done and what is left for today: prompts, Flow generation, every later stage per open batch.
+
+    This is what the dailyrun skill reads first, so one run resumes exactly where the previous one stopped
+    (for example C-Day 190: prompts done and images generated -> download/QC/metadata come next).
+    """
+    from datetime import datetime, timedelta, timezone
+    tz = timezone(timedelta(hours=tz_offset_hours))
+    now = now_local if now_local.tzinfo else now_local.replace(tzinfo=tz)
+    plan = due(states, now, tz_offset_hours, last_research)
+    batches = [batch_stages(d) for d in sorted(states, key=lambda d: d["day"])]
+    open_batches = [b for b in batches if b["next"] or b["failed"]]
+    newest = max(states, key=lambda d: d["day"]) if states else None
+    created_today = bool(newest) and datetime.fromisoformat(newest["created_at"]).astimezone(tz).date() == now.date()
+    if created_today:
+        prompts = "done"
+    elif now.hour < PROMPTS_FROM_HOUR:
+        prompts = "not_yet"
+    elif {"do": "prompts"} in plan["actions"]:
+        prompts = "pending"
+    else:
+        prompts = "blocked_by_open_batch"       # newest batch is still waiting for Nathan to generate
+    return {
+        "now": now.isoformat(),
+        "today": now.date().isoformat(),
+        "research": "pending" if {"do": "research"} in plan["actions"] else "done",
+        "prompts_today": prompts,
+        "newest_batch": newest["batch_id"] if newest else None,
+        "open_batches": open_batches,
+        "actions": plan["actions"],
+        "skip_stale": plan["skip_stale"],
+        "silent": plan["silent"],
+    }
+
+
 RESEARCH_WEEKDAY = 0      # Monday
 RESEARCH_FROM_HOUR = 6
 RESEARCH_MAX_AGE_DAYS = 8
@@ -400,7 +463,7 @@ def latest_research():
 
 
 def cmd_research_brief(a, cfg):
-    """Print the newest research brief (used by prompts)."""
+    """Print the newest research brief (used by the prompts stage)."""
     p, brief = latest_research()
     _out({"path": str(p) if p else None, "brief": brief})
 
@@ -492,6 +555,17 @@ def cmd_due(a, cfg):
     _out(due(states, now, last_research=last))
 
 
+def cmd_day_status(a, cfg):
+    """Checklist of what is done / pending today per stage and batch (read-only)."""
+    from datetime import datetime
+    states = [json.loads(p.read_text(encoding="utf-8")) for p in sorted(C.local_state_dir().glob("C*.json"))
+              if not p.name.endswith("-plan.json")]
+    now = datetime.fromisoformat(a.now) if a.now else datetime.now()
+    p, brief = latest_research()
+    last = datetime.fromisoformat(brief["generated_at"]) if brief else None
+    _out(day_status(states, now, last_research=last))
+
+
 def cmd_checkpoint(a, cfg):
     """Record that "Submit this batch?" was sent, so scheduled runs do not ask again for 12 h."""
     b = _batch(cfg, a.n)
@@ -502,8 +576,8 @@ def cmd_checkpoint(a, cfg):
 
 # ---------------- component check ----------------
 REQUIRED_AGENTS = ["visual-qc", "browser-operator", "market-researcher"]
-REQUIRED_SKILLS = ["dailyrun", "prompts", "download", "qc", "metadata", "weeklyreport",
-                   "upload"]
+REQUIRED_SKILLS = ["dailyrun"]      # the only skill; stage details are in dailyrun/reference/
+REQUIRED_REFERENCES = ["prompts", "download", "qc", "metadata", "portal", "weekly"]
 
 
 def _frontmatter_name(path: Path) -> str | None:
@@ -538,6 +612,9 @@ def cmd_doctor(a, cfg):
             report[kind][n] = {"path": str(p.relative_to(C.REPO)), "ok": good,
                                "error": None if good else ("missing" if not p.exists() else f"frontmatter name {name!r}")}
             ok = ok and good
+    refs = {n: root / "skills" / "dailyrun" / "reference" / f"{n}.md" for n in REQUIRED_REFERENCES}
+    report["references"] = {n: {"ok": p.exists()} for n, p in refs.items()}
+    ok = ok and all(r["ok"] for r in report["references"].values())
     bo = (root / "agents" / "browser-operator.md")
     if bo.exists() and "no submit mode" not in bo.read_text(encoding="utf-8"):
         report["agents"]["browser-operator"].update(ok=False, error="must not contain a submit mode")
@@ -610,6 +687,7 @@ def main(argv=None):
     add("approve", cmd_approve, N, (["--text"], {"required": True}), (["--by"], {"default": "nathan"}))
     add("doctor", cmd_doctor)
     add("due", cmd_due, (["--now"], {"default": None, "help": "local time ISO, e.g. 2026-10-27T19:17+07:00"}))
+    add("day-status", cmd_day_status, (["--now"], {"default": None, "help": "local time ISO, e.g. 2026-11-04T06:30+07:00"}))
     add("checkpoint", cmd_checkpoint, N)
     add("weekly-stats", cmd_weekly_stats, (["--days"], {"type": int, "default": 7}), (["--now"], {"default": None}))
     add("research-brief", cmd_research_brief)

@@ -334,3 +334,35 @@ def test_vecteezy_filename_and_ascii_keywords(tmp_path):
     md = dict(GOOD_MD, keywords=GOOD_MD["keywords"][:-1] + ["gl\u00fchwein"])
     errs, _ = M.validate(md, CFG)
     assert any("non-ASCII" in e for e in errs)
+
+
+def test_day_status_resumes_where_the_day_stopped():
+    """C-Day 190: prompts done today and images generated -> download/QC come next, prompts are not offered again."""
+    from datetime import datetime
+    from msp.cli import day_status
+    old = _st("C189", 189, "2026-11-02T22:00:00+00:00", ["queued", "queued", "qc_reject"])
+    new = _st("C190", 190, "2026-11-03T23:00:00+00:00", ["image_generated"] * 2 + ["downloaded"] * 2)
+    r = day_status([old, new], datetime.fromisoformat("2026-11-04T06:30+07:00"),
+                   last_research=datetime.fromisoformat("2026-11-03T09:00+07:00"))
+    assert r["prompts_today"] == "done" and r["newest_batch"] == "C190"
+    by = {b["batch"]: b for b in r["open_batches"]}
+    assert by["C190"]["stages"]["generate"]["state"] == "done"
+    assert by["C190"]["stages"]["download"] == {"state": "pending", "assets": 2}
+    assert by["C190"]["next"] == "download"
+    assert by["C189"]["next"] == "upload" and by["C189"]["stages"]["upload"]["state"] == "waiting"
+    assert {"do": "prompts"} not in r["actions"]
+
+
+def test_day_status_waits_for_generation_and_blocks_new_prompts():
+    from datetime import datetime
+    from msp.cli import day_status
+    new = _st("C190", 190, "2026-11-04T06:35:00+07:00", ["prompt_generated"] * 3)
+    r = day_status([new], datetime.fromisoformat("2026-11-04T19:00+07:00"),
+                   last_research=datetime.fromisoformat("2026-11-03T09:00+07:00"))
+    assert r["prompts_today"] == "done"
+    assert r["open_batches"][0]["next"] == "generate"
+    assert r["open_batches"][0]["stages"]["generate"]["state"] == "waiting"
+    nxt = day_status([_st("C189", 189, "2026-11-03T01:00:00+00:00", ["submitted"])],
+                     datetime.fromisoformat("2026-11-04T06:30+07:00"),
+                     last_research=datetime.fromisoformat("2026-11-03T09:00+07:00"))
+    assert nxt["prompts_today"] == "pending" and nxt["open_batches"] == []

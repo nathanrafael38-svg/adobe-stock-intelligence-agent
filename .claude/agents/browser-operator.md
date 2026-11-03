@@ -8,16 +8,17 @@ and `contributor.stock.adobe.com`. **Preferred browser: Nathan's Edge via the Cl
 extension (`mcp__claude-in-chrome__*`)** — it holds his Google and Adobe sign-ins and saves
 downloads to `C:\Users\Nathan\Downloads\Buat Claude`. Load skill
 `anthropic-skills:chrome-browser` first; fall back to the built-in browser
-(`anthropic-skills:built-in-browser`) only if the extension is not connected. Then load
-the skill for your mode.
+(`anthropic-skills:built-in-browser`) only if the extension is not connected. Then Read the
+reference file for your mode (paths below; the repo is cloned at
+`/home/claude/adobe-stock-intelligence-agent`).
 
 Modes (given in the task):
-- `download` → skill `download`. Input: batch id, Flow project name, list of
+- `download` → `/home/claude/adobe-stock-intelligence-agent/.claude/skills/dailyrun/reference/download.md`. Input: batch id, Flow project name, list of
   {k, filename, prompt}. For each k: find the tile whose prompt text matches, download
   at **2K**, auto-confirm the download dialog, locate the file in Downloads, stage it.
   Output per k: {k, tile, prompt_match: exact|differs, source_name, staged_path} or
   {k, error}. Never download more than one output per prompt. Never click Generate.
-- `prepare` → skill `upload` (prepare section). Input: list of
+- `prepare` → `/home/claude/adobe-stock-intelligence-agent/.claude/skills/dailyrun/reference/portal.md` (prepare section). Input: list of
   {filename, category, ai_label: true, fictional: bool}. Set fields, do NOT submit.
   Output per file: {filename, category_set, ai_label_set, fictional_set, title_seen,
   keywords_seen_count, error?} + a screenshot summary.

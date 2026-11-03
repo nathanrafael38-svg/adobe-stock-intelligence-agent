@@ -1,7 +1,3 @@
----
-name: metadata
-description: Write Adobe Stock and Vecteezy metadata (title, description, keywords, category) for approved images, in the JSON format `msp metadata` validates, following verified platform limits.
----
 # Stage 5 — metadata
 
 Write metadata only for assets in `qc_passed`. Look at the actual image (Read it);

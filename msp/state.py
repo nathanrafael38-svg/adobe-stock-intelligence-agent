@@ -45,7 +45,7 @@ TRANSITIONS: dict[str, set[str]] = {
     "fields_configured": {"submit_approved", "fields_configured"},
     "submit_approved": {"submitted"},
     "submitted": {"platform_accepted", "platform_rejected"},
-    "qc_reject": set(),
+    "qc_reject": {"prompt_generated"},  # only via `msp regenerate` (tech aspect_mismatch)
     "platform_accepted": set(),
     "platform_rejected": set(),
     "failed": {"prompt_generated"},  # explicit reset only

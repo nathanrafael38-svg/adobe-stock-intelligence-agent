@@ -366,3 +366,27 @@ def test_day_status_waits_for_generation_and_blocks_new_prompts():
                      datetime.fromisoformat("2026-11-04T06:30+07:00"),
                      last_research=datetime.fromisoformat("2026-11-03T09:00+07:00"))
     assert nxt["prompts_today"] == "pending" and nxt["open_batches"] == []
+
+
+def test_regenerate_only_for_tech_aspect_reject(ws):
+    from msp import cli
+    b = Batch.create(ws / "C3.json", "C3", 3, _plan()[:2], ["C3_01.jpg", "C3_02.jpg"])
+    for k, errs, stage in [(1, ["aspect_mismatch:1.000!=16:9"], "tech"), (2, ["corrupt"], "tech")]:
+        b.transition(k, "image_generated", {"project": "p", "prompt_match": "exact"})
+        b.transition(k, "downloaded", {"sha256": "x%d" % k, "source": "s", "saved_as": "a"}, sha256="x%d" % k)
+        b.transition(k, "qc_reject", {"stage": stage, "errors": errs})
+    class A:  # minimal argparse stand-in
+        n = 3
+    cfg = CFG
+    import msp.config as C
+    old = C.local_state_dir
+    C.local_state_dir = lambda: ws
+    try:
+        a = A(); a.k = 1; a.reason = "wrong aspect"
+        cli.cmd_regenerate(a, cfg)
+        assert Batch.load(ws / "C3.json").asset(1)["status"] == "prompt_generated"
+        a2 = A(); a2.k = 2; a2.reason = "x"
+        with pytest.raises(StateError):
+            cli.cmd_regenerate(a2, cfg)
+    finally:
+        C.local_state_dir = old

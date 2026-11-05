@@ -78,6 +78,25 @@ def cmd_generated(a, cfg):
     _out(b.asset(a.k)["status"])
 
 
+def cmd_regenerate(a, cfg):
+    """Reset a tech-QC aspect_mismatch reject to prompt_generated so Nathan can regenerate it in Flow.
+
+    Only for wrong-aspect generations (a Flow ratio mistake). Visual rejects and every other
+    tech failure stay rejected: a regenerated image of a bad concept is a new asset, not a fix.
+    """
+    b = _batch(cfg, a.n)
+    asset = b.asset(a.k)
+    if asset["status"] != "qc_reject":
+        raise StateError(f"{asset['filename']} is {asset['status']}; regenerate needs qc_reject")
+    ev = asset["history"][-1].get("evidence", {})
+    errs = ev.get("errors") or []
+    if ev.get("stage") != "tech" or not errs or not all(str(e).startswith("aspect_mismatch") for e in errs):
+        raise StateError(f"{asset['filename']}: only tech aspect_mismatch rejects can be regenerated (got {ev})")
+    b.transition(a.k, "prompt_generated", {"regenerated": True, "reason": a.reason, "previous_sha256": asset.get("sha256"),
+                                          "previous_errors": errs})
+    _out(b.asset(a.k)["status"])
+
+
 def cmd_ingest(a, cfg):
     """Save a downloaded (or upscaled) file as Day N/_original/C{N}_kk.jpg."""
     b = _batch(cfg, a.n)
@@ -672,6 +691,7 @@ def main(argv=None):
     add("init", cmd_init, N, (["--plan"], {"required": True}), (["--allow-invalid"], {"action": "store_true"}))
     add("generated", cmd_generated, N, K1, (["--project"], {"required": True}), (["--tile"], {"default": ""}),
         (["--prompt-match"], {"choices": ["exact", "differs"], "required": True}), (["--by"], {"default": "nathan"}))
+    add("regenerate", cmd_regenerate, N, K1, (["--reason"], {"default": "wrong aspect in Flow"}))
     add("ingest", cmd_ingest, N, K1, (["--src"], {"required": True}), (["--source-name"], {"default": None}))
     add("qc", cmd_qc, N, KS, (["--recheck"], {"action": "store_true"}))
     add("review", cmd_review, N, K1, (["--verdict"], {"choices": ["KIRIM", "TOLAK", "REVIEW"], "required": True}),

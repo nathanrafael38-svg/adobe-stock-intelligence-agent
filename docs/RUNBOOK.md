@@ -5,7 +5,7 @@
 |---|---|---|
 | PC on, logon | Claude desktop + Edge open by themselves (`autostart.bat` in Startup) | Windows |
 | 06:30 | "Microstock daily run" (once a day): `msp due` decides — weekly research and report (Mondays), process batches Nathan generated, reconcile uploads, prepare portal fields and tell Nathan the batch is ready (he submits manually), then prompts for the next C-Day. Silent when nothing to do. | Claude scheduled task |
-| any time after the run | generate x1 per prompt in Flow project `C-Day N` (microstock account) | Nathan |
+| any time after the run | generate x1 per prompt in the Flow project already open (microstock account; do not create a new project) | Nathan |
 | every 15 min | `adobe_upload.bat` uploads the queue | Windows task (after `setup_tasks.bat`) |
 | every 15 min | `upscale_watch.bat` (only does work when files are queued) | Windows task "Microstock Upscale Watch" |
 | when convenient | submit the prepared batch in the Adobe portal yourself (Terms + CAPTCHA) | Nathan |

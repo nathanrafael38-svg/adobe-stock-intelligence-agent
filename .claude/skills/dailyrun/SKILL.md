@@ -33,7 +33,7 @@ Paths are relative to `.claude/skills/dailyrun/` in the repo clone.
    Example, C-Day 190 at 11:00: prompts done, `generate` done (Nathan generated), `download` pending →
    run download, QC, metadata, queue; then prompts for C-Day 191 are not due yet.
 3. `generate` = `waiting` does **not** prove Nathan has not generated: state only changes after a download.
-   Open the Flow project `C-Day N` (browser-operator, mode=download): tiles exist → continue at download;
+   Look at the Flow project Nathan already has open (browser-operator, mode=download; never create a new project): tiles exist → continue at download;
    none yet → stay silent in a scheduled run, or say "belum ada tile di Flow" in chat.
 4. `silent: true` → release the lock (`state=done`) and **end without any message**.
 5. `skip_stale` → `msp mark --n N --k ... --status skipped --evidence '{"reason":"not generated within 2 days"}'`.

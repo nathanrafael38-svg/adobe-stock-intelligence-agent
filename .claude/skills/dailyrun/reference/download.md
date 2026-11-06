@@ -7,8 +7,11 @@ Never pick another account and never sign in with a password → `blocked: wrong
 Downloads land in `C:\Users\Nathan\Downloads\Buat Claude` (Edge setting, set by Nathan).
 
 ## Per batch
-1. Open `https://labs.google/fx/tools/flow` (redirects to flow.google.com) → project named exactly `C-Day N`.
-   Missing project → return `{error: "project not found"}` for all k.
+1. **Use the Flow project/group Nathan already has open** (standing rule, 2026-11-06). Find the Flow tab
+   in Edge (tabs_context); never create a new project/group and never rename one. No Flow tab open →
+   open `https://labs.google/fx/tools/flow/` and pick the most recently edited project; do not create one.
+   Match tiles to the batch by exact prompt hash, so a shared project with older tiles is fine.
+   No tile matches any prompt → return `{error: "not generated"}` for all k.
 2. Read every tile once (read_page/get_page_text) and build a list of tiles with
    their prompt text (open tile details if the grid does not show the prompt).
 
@@ -22,7 +25,7 @@ Downloads land in `C:\Users\Nathan\Downloads\Buat Claude` (Edge setting, set by 
 3. Download → choose **2K**. A confirmation dialog may appear: confirm it (standing
    auto-approval). Never choose 1K or 4K/upscaled.
 4. Wait for the file: list the Downloads folder (device_list_dir) until a new
-   `*_2K_*.jpg` newer than the click appears (max 60 s). Record its exact name.
+   `*2K*.jpg` newer than the click appears (max 60 s). Record its exact name.
 5. Stage it with device_stage_files and return `staged_path`.
 
 ## Verified UI (2026-10-26)
@@ -30,7 +33,7 @@ Downloads land in `C:\Users\Nathan\Downloads\Buat Claude` (Edge setting, set by 
   contains the full prompt (longest line) and the tile title after `arrow_back`.
 - `button[aria-label*="Download media"]` → menu `button[mat-menu-item]`: `1K Original size`,
   `2K Upscaled`, `4K` (paid). Click 2K; a toast "Upscaling your image, download will start
-  automatically" appears, then the file saves as `<Title>_2K_<YYYYMMDDHHMMSS>.jpg`. There is
+  automatically" appears, then the file saves as `<Title>_<8hex>_2K.jpg` (older: `<Title>_2K_<YYYYMMDDHHMMSS>.jpg`). There is
   no confirmation dialog in this flow.
 - One tile takes ~20 s. Run the loop inside the page as a fire-and-forget async function
   storing results in `window.__dl` and poll it (a single JS call times out after 45 s).

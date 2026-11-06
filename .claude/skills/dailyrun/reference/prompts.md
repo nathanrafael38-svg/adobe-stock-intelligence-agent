@@ -33,7 +33,7 @@ subject. (The validator rejects it otherwise — it invites stray hands.)
 ## Finish
 Save as `$MSP_WORKSPACE/plan_C{N}.json`, run `python -m msp validate-plan`, fix every
 error, then `python -m msp init --n N --plan ...` and commit the three files it lists.
-Send Nathan the Excel prompt sheet `Day N\PROMPTS_C{N}.xlsx` (attach it with SendUserFile) and the Flow project name `C-Day N`,
+Send Nathan the Excel prompt sheet `Day N\PROMPTS_C{N}.xlsx` (attach it with SendUserFile) and say to generate in the Flow project he already has open (no new project/group),
 with the reminder to pick model **Nano Banana Pro** in the Flow composer before generating (Flow defaults to Nano Banana 2 Lite).
 
 ## Lessons from QC (C184: 8 of 20 rejected; C185 with Nano Banana Pro: 1 of 20)

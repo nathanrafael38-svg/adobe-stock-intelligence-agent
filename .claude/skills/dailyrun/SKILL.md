@@ -116,6 +116,10 @@ Any answer other than an explicit yes → no submission; leave `fields_configure
 
 ## Device file protocol
 - Write outputs to `/mnt/user-data/outputs/...`, then `device_commit_files`.
+- **Use a new, unique staged path for every commit** (e.g. `/mnt/user-data/outputs/<unix-ts>/RUN.lock`).
+  The bridge can reuse an earlier upload of the same staged path, so re-committing a changed file from
+  the same path silently writes the OLD content (seen 2026-11-08: RUN.lock stayed `active`, C193 state
+  lost 10 marks). After committing state or RUN.lock, re-stage it and check its size/content.
 - For any device file you overwrite (state JSON), pass `expectedMtimeMs` from your
   last listing; on mtime conflict, re-stage, re-apply your change, retry once.
 - Never commit into `_UPLOAD_QUEUE\` root; only `_incoming\` + READY.flag.

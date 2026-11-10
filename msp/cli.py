@@ -230,6 +230,49 @@ def cmd_csv(a, cfg):
     return 2 if errs else 0
 
 
+DT_AI_SUBCAT = 212  # Illustrations & Clipart > Generative AI (required by Dreamstime for AI content)
+DT_FROM_ADOBE = {4: 127, 7: 127, 8: 112, 9: 158, 11: 146, 12: 138, 14: 25, 15: 202}
+DT_COLUMNS = ["Filename", "Image Name", "Description", "Category 1", "Category 2", "Category 3",
+              "keywords", "Free", "W-EL", "P-EL", "SR-EL", "SR-Price", "Editorial", "MR doc Ids", "Pr Docs"]
+
+
+def cmd_dt_csv(a, cfg):
+    """Dreamstime CSV: Category 1 is always Generative AI and the description says it is AI-made.
+
+    --cats is an optional JSON file {"k": [cat2, cat3]} with Dreamstime subcategory ids; without it
+    Category 2 comes from the Adobe category and Category 3 stays empty. Only assets that are
+    queued or later (QC-passed, metadata embedded) are written. Files with people as the main
+    subject need a model release on Dreamstime, so they are skipped unless --allow-people.
+    """
+    import csv
+    b = _batch(cfg, a.n)
+    extra = json.loads(Path(a.cats).read_text()) if a.cats else {}
+    skip = set(int(x) for x in (a.skip or "").split(",") if x)
+    rows, skipped = [], []
+    for x in b.assets():
+        md = x.get("metadata")
+        if not md or x["status"] in ("qc_reject", "failed", "skipped", "prompt_generated", "metadata_validated"):
+            continue
+        if x["k"] in skip:
+            skipped.append(x["filename"])
+            continue
+        cats = extra.get(str(x["k"])) or [DT_FROM_ADOBE.get(md.get("category"), 145)]
+        cats = [c for c in cats if c and c != DT_AI_SUBCAT][:2]
+        desc = md["description"].rstrip(".") + ". Image created with generative AI."
+        rows.append([x["filename"], md["title"], desc, DT_AI_SUBCAT] + (cats + ["", ""])[:2] +
+                    [",".join(md["keywords"]), 0, 0, 0, 0, 0, 0, "", ""])
+    out = C.local_day(cfg, a.n) / "Metadata" / "dreamstime-metadata.csv"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    with open(out, "w", newline="", encoding="utf-8") as f:
+        w = csv.writer(f, quoting=csv.QUOTE_MINIMAL)
+        w.writerow(DT_COLUMNS)
+        w.writerows(rows)
+    b.log("dt_csv", rows=len(rows), skipped=skipped)
+    _out({"rows": len(rows), "skipped": skipped, "file": str(out),
+          "device": C.device_path(cfg, C.day_dir(cfg, a.n), "Metadata", out.name)})
+    return 0
+
+
 def cmd_verify_device(a, cfg):
     """Read back the copies that now live on the PC (staged into --dir).
 
@@ -699,6 +742,7 @@ def main(argv=None):
     add("metadata", cmd_metadata, N, (["--file"], {"required": True}))
     add("embed", cmd_embed, N)
     add("csv", cmd_csv, N)
+    add("dt-csv", cmd_dt_csv, N, (["--cats"], {"default": None}), (["--skip"], {"default": ""}))
     add("verify-device", cmd_verify_device, N, (["--dir"], {"required": True}))
     add("enqueue", cmd_enqueue, N, (["--confirm"], {"default": None}), (["--local-ts"], {"default": ""}))
     add("reconcile", cmd_reconcile, N, (["--log"], {"required": True}))

@@ -21,8 +21,12 @@ if not exist "%Q%\*.jpg" (
   pause
   exit /b 0
 )
-"C:\Program Files (x86)\WinSCP\WinSCP.com" /log="%BASE%\_logs\vecteezy_winscp.log" /script="%BASE%\_tools\vecteezy_site.txt"
+set "TMPS=%TEMP%\vz_run.txt"
+rem Vecteezy server rejects SETSTAT: add -nopreservetime -nopermissions to every put in a temp copy of the site script
+powershell -NoProfile -Command "(Get-Content '%BASE%\_tools\vecteezy_site.txt') -replace '^(\s*put\s.*?)(\s+-no\w+)*\s*$','$1 -nopreservetime -nopermissions' | Set-Content -Encoding ASCII '%TMPS%'"
+"C:\Program Files (x86)\WinSCP\WinSCP.com" /log="%BASE%\_logs\vecteezy_winscp.log" /script="%TMPS%"
 set "RC=%ERRORLEVEL%"
+del "%TMPS%" >nul 2>&1
 >>"%RUNLOG%" echo %date% %time% winscp exit %RC%
 if "%RC%"=="0" (
   move /Y "%Q%\*.jpg" "%Q%\_sent\" >nul

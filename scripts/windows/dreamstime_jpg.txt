@@ -1,0 +1,5 @@
+option batch abort
+option confirm off
+open "Dreamstime"
+put "F:\2. Microstock\2. Setelah Edit\1. Gambar\1. Dari Claude\_UPLOAD_QUEUE_DT\*.jpg"
+exit

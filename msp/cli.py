@@ -346,6 +346,21 @@ def cmd_enqueue(a, cfg):
     return 2 if bad else 0
 
 
+def cmd_requeue(a, cfg):
+    """A queued file vanished without a completed upload (e.g. WinSCP killed mid-transfer)
+    and the portal does not show it: put it back to metadata_embedded so `msp enqueue`
+    queues it again. Needs the reason and the portal check as evidence."""
+    b = _batch(cfg, a.n)
+    for k in a.k:
+        x = b.asset(k)
+        if x["status"] != "queued":
+            raise SystemExit(f"{x['filename']}: requeue only from queued (is {x['status']})")
+        emb = next(h for h in reversed(x["history"]) if h["status"] == "metadata_embedded")["evidence"]
+        b.transition(k, "metadata_embedded", {**emb, "verified": True, "requeue": True,
+                                              "reason": a.reason, "portal_check": a.portal_check})
+    _out(b.summary())
+
+
 def cmd_reconcile(a, cfg):
     b = _batch(cfg, a.n)
     text = Path(a.log).read_text(encoding="utf-8", errors="replace")
@@ -745,6 +760,8 @@ def main(argv=None):
     add("dt-csv", cmd_dt_csv, N, (["--cats"], {"default": None}), (["--skip"], {"default": ""}))
     add("verify-device", cmd_verify_device, N, (["--dir"], {"required": True}))
     add("enqueue", cmd_enqueue, N, (["--confirm"], {"default": None}), (["--local-ts"], {"default": ""}))
+    add("requeue", cmd_requeue, N, (["--k"], {"type": int, "nargs": "+", "required": True}),
+        (["--reason"], {"required": True}), (["--portal-check"], {"required": True}))
     add("reconcile", cmd_reconcile, N, (["--log"], {"required": True}))
     add("mark", cmd_mark, N, (["--k"], {"type": int, "nargs": "+", "required": True}),
         (["--status"], {"required": True}), (["--evidence"], {"default": None}))

@@ -390,3 +390,12 @@ def test_regenerate_only_for_tech_aspect_reject(ws):
             cli.cmd_regenerate(a2, cfg)
     finally:
         C.local_state_dir = old
+
+
+def test_manual_submission_needs_nathan_marker(tmp_path):
+    d = {"batch_id": "C1", "assets": {"1": {"k": 1, "filename": "C1_01.jpg", "status": "fields_configured", "history": []}}}
+    b = Batch(tmp_path / "C1.json", d)
+    with pytest.raises(StateError):
+        b.transition(1, "submitted", {"portal_evidence": "x"})
+    b.transition(1, "submitted", {"portal_evidence": "x", "submitted_by": "nathan_manual"})
+    assert b.asset(1)["status"] == "submitted"

@@ -41,8 +41,8 @@ TRANSITIONS: dict[str, set[str]] = {
     "metadata_validated": {"metadata_embedded"},
     "metadata_embedded": {"queued", "metadata_validated"},
     "queued": {"sftp_uploaded"},
-    "sftp_uploaded": {"fields_configured"},
-    "fields_configured": {"submit_approved", "fields_configured"},
+    "sftp_uploaded": {"fields_configured", "submitted"},  # "submitted" only as a manual submission (see transition)
+    "fields_configured": {"submit_approved", "fields_configured", "submitted"},
     "submit_approved": {"submitted"},
     "submitted": {"platform_accepted", "platform_rejected"},
     "qc_reject": {"prompt_generated"},  # only via `msp regenerate` (tech aspect_mismatch)
@@ -142,6 +142,10 @@ class Batch:
         missing = REQUIRED_EVIDENCE.get(status, set()) - set(evidence)
         if missing:
             raise StateError(f"{a['filename']}: {status} needs evidence {sorted(missing)}")
+        if status == "submitted" and cur != "submit_approved" and not force:
+            # Nathan submitted by hand (Terms + CAPTCHA); only allowed with portal proof and his name on it.
+            if evidence.get("submitted_by") != "nathan_manual":
+                raise StateError(f"{a['filename']}: {cur} -> submitted needs approval, or evidence submitted_by=nathan_manual")
         if status == "metadata_embedded" and evidence.get("verified") is not True:
             raise StateError("metadata_embedded requires verified=True (read-back)")
         a["status"] = status

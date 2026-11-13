@@ -129,6 +129,9 @@ Any answer other than an explicit yes → no submission; leave `fields_configure
 - Flow "unusual activity"/policy failures: record `failed`, tell Nathan in the summary.
 - Browser blocked (login/CAPTCHA): skip the browser steps, finish the rest, report.
 - Upload task did not run within 30 min: report; do not run WinSCP yourself.
+- A `queued` file is gone from `_UPLOAD_QUEUE` but winscp.log has no "Transfer done" for it (WinSCP/PC died
+  mid-transfer) and `browser-operator` does not find it in New / In review → `msp requeue --n N --k .. --reason ..
+  --portal-check ..`, then the normal F/G steps (verify-device, enqueue two-phase, READY.flag).
 
 ## Finish (always, even after errors)
 `msp qc-report --n N`, `msp status --n N`, commit state + QC report, overwrite `RUN.lock` with `state=done` + time,

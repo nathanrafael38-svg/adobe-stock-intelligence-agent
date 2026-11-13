@@ -40,7 +40,7 @@ TRANSITIONS: dict[str, set[str]] = {
     "qc_passed": {"metadata_validated", "qc_reject"},  # visual QC can still reject
     "metadata_validated": {"metadata_embedded"},
     "metadata_embedded": {"queued", "metadata_validated"},
-    "queued": {"sftp_uploaded"},
+    "queued": {"sftp_uploaded", "metadata_embedded"},  # back to metadata_embedded only via `msp requeue` (upload lost)
     "sftp_uploaded": {"fields_configured", "submitted"},  # "submitted" only as a manual submission (see transition)
     "fields_configured": {"submit_approved", "fields_configured", "submitted"},
     "submit_approved": {"submitted"},

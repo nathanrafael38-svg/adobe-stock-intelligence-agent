@@ -399,3 +399,20 @@ def test_manual_submission_needs_nathan_marker(tmp_path):
         b.transition(1, "submitted", {"portal_evidence": "x"})
     b.transition(1, "submitted", {"portal_evidence": "x", "submitted_by": "nathan_manual"})
     assert b.asset(1)["status"] == "submitted"
+
+
+def test_requeue_lost_upload(ws, capsys):
+    from msp import cli
+    b = _queued(ws, 1234)
+    (ws / "_state").mkdir(exist_ok=True)
+    os.replace(ws / "C1.json", ws / "_state" / "C1.json")
+    b.path = ws / "_state" / "C1.json"
+    with pytest.raises(SystemExit):
+        cli.main(["requeue", "--n", "1", "--k", "1", "--reason", "x"])  # portal check required
+    assert cli.main(["requeue", "--n", "1", "--k", "1", "--reason", "winscp cut off",
+                     "--portal-check", "not in New/In review"]) in (0, None)
+    a = Batch.load(ws / "_state" / "C1.json").asset(1)
+    assert a["status"] == "metadata_embedded"
+    assert a["history"][-1]["evidence"]["requeue"] and a["history"][-1]["evidence"]["bytes"] == 1234
+    with pytest.raises(SystemExit):  # only from queued
+        cli.main(["requeue", "--n", "1", "--k", "1", "--reason", "x", "--portal-check", "y"])

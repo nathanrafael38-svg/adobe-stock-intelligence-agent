@@ -2,13 +2,17 @@
 rem Microstock upload watcher (Task Scheduler "Microstock Upload Watch", every 10 minutes).
 rem The orchestrator (/upload) copies photos into _UPLOAD_QUEUE_VZ and _UPLOAD_QUEUE_DT and writes
 rem READY.flag in that queue LAST. This script sees the flag and runs the existing upload script.
-rem Adobe has its own task ("Adobe Stock SFTP Upload") and is not touched here.
+rem Adobe is sent here too (adobe_upload.bat promotes _incoming when READY.flag exists, then runs WinSCP).
 rem No password is in this file: logins are the sites saved in WinSCP.
 setlocal
 set "BASE=F:\2. Microstock\2. Setelah Edit\1. Gambar\1. Dari Claude"
 set "RUNLOG=%BASE%\_logs\upload_watch.log"
 set "NOPAUSE=1"
 if not exist "%BASE%\_logs" mkdir "%BASE%\_logs"
+
+>>"%RUNLOG%" echo %date% %time% adobe: running adobe_upload.bat
+call "%BASE%\_tools\adobe_upload.bat" >nul 2>&1
+>>"%RUNLOG%" echo %date% %time% adobe: exit %ERRORLEVEL%
 
 if exist "%BASE%\_UPLOAD_QUEUE_VZ\READY.flag" (
   >>"%RUNLOG%" echo %date% %time% vecteezy: READY.flag found, starting upload

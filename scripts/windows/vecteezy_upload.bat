@@ -12,13 +12,13 @@ if not exist "%Q%\_sent" mkdir "%Q%\_sent"
 if not exist "%BASE%\_tools\vecteezy_site.txt" (
   >>"%RUNLOG%" echo %date% %time% ERROR _tools\vecteezy_site.txt not found
   echo vecteezy_site.txt tidak ditemukan di _tools
-  pause
+  if not defined NOPAUSE pause
   exit /b 3
 )
 if not exist "%Q%\*.jpg" (
   >>"%RUNLOG%" echo %date% %time% nothing to upload
   echo Tidak ada file di _UPLOAD_QUEUE_VZ
-  pause
+  if not defined NOPAUSE pause
   exit /b 0
 )
 set "TMPS=%TEMP%\vz_run.txt"
@@ -35,5 +35,5 @@ if "%RC%"=="0" (
 ) else (
   echo Upload gagal, kode %RC%. Lihat _logs\vecteezy_winscp.log
 )
-pause
+if not defined NOPAUSE pause
 exit /b %RC%

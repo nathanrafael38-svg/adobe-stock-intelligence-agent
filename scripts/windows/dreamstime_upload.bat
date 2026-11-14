@@ -15,7 +15,7 @@ if not exist "%Q%\csv" mkdir "%Q%\csv"
 if not exist "%Q%\*.jpg" if not exist "%Q%\csv\*.csv" (
   >>"%RUNLOG%" echo %date% %time% nothing to upload
   echo Tidak ada file di _UPLOAD_QUEUE_DT
-  pause
+  if not defined NOPAUSE pause
   exit /b 0
 )
 if exist "%Q%\*.jpg" (
@@ -23,7 +23,7 @@ if exist "%Q%\*.jpg" (
   if errorlevel 1 (
     >>"%RUNLOG%" echo %date% %time% ERROR jpg upload failed
     echo Upload JPG gagal. Lihat _logs\dreamstime_winscp.log
-    pause
+    if not defined NOPAUSE pause
     exit /b 1
   )
   move /Y "%Q%\*.jpg" "%Q%\_sent\" >nul
@@ -36,12 +36,12 @@ if exist "%Q%\csv\*.csv" (
   if errorlevel 1 (
     >>"%RUNLOG%" echo %date% %time% ERROR csv upload failed
     echo Upload CSV gagal. Lihat _logs\dreamstime_winscp.log
-    pause
+    if not defined NOPAUSE pause
     exit /b 2
   )
   move /Y "%Q%\csv\*.csv" "%Q%\_sent\" >nul
   >>"%RUNLOG%" echo %date% %time% csv uploaded
 )
 echo Upload Dreamstime selesai.
-pause
+if not defined NOPAUSE pause
 exit /b 0

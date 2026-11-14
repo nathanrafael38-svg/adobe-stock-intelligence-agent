@@ -273,6 +273,54 @@ def cmd_dt_csv(a, cfg):
     return 0
 
 
+STOCK_SKIP_STATUS = ("qc_reject", "failed", "skipped", "prompt_generated", "metadata_validated", "downloaded",
+                     "image_generated", "upscale_pending", "qc_review", "qc_passed")
+
+
+def _stock_select(cfg, ns, skip_files, allow_people):
+    """Photos (never illustrations) that passed QC and have metadata, for Vecteezy and Dreamstime.
+    People photos stay out unless allowed (model release). Returns files + per-batch asset ks."""
+    people_hint = set(skip_files)
+    files, ks, rows = [], {}, []
+    for n in ns:
+        b = _batch(cfg, n)
+        for x in b.assets():
+            md = x.get("metadata")
+            if x.get("type") != "photo" or not md or x["status"] in STOCK_SKIP_STATUS:
+                continue
+            if x["filename"] in people_hint and not allow_people:
+                continue
+            files.append(x["filename"])
+            ks.setdefault(str(n), []).append(x["k"])
+            rows.append(md)
+    return files, ks, rows
+
+
+def cmd_stock_select(a, cfg):
+    """List the photos to send to Vecteezy/Dreamstime and the --skip list per batch for dt-csv."""
+    ns = [int(v) for v in a.ns.split(",") if v]
+    skip = [v for v in (a.skip or "").split(",") if v]
+    files, ks, _ = _stock_select(cfg, ns, skip, False)
+    dt_skip = {}
+    for n in ns:
+        b = _batch(cfg, n)
+        keep = set(ks.get(str(n), []))
+        dt_skip[str(n)] = [x["k"] for x in b.assets() if x["k"] not in keep]
+    _out({"files": files, "keep_k": ks, "dt_skip_k": dt_skip, "excluded_people": skip})
+
+
+def cmd_vz_csv(a, cfg):
+    """One Vecteezy CSV for the selected photos of several batches (import by hand on the Vecteezy site)."""
+    ns = [int(v) for v in a.ns.split(",") if v]
+    skip = [v for v in (a.skip or "").split(",") if v]
+    files, _, rows = _stock_select(cfg, ns, skip, False)
+    out = Path(a.out)
+    M.write_vecteezy_csv(out, rows, cfg)
+    errs = M.validate_csv(out, cfg["vecteezy"]["csv_columns"], [M.vz_filename(f, cfg) for f in files])
+    _out({"rows": len(rows), "errors": errs, "file": str(out), "files": files})
+    return 2 if errs else 0
+
+
 def cmd_verify_device(a, cfg):
     """Read back the copies that now live on the PC (staged into --dir).
 
@@ -758,6 +806,8 @@ def main(argv=None):
     add("embed", cmd_embed, N)
     add("csv", cmd_csv, N)
     add("dt-csv", cmd_dt_csv, N, (["--cats"], {"default": None}), (["--skip"], {"default": ""}))
+    add("stock-select", cmd_stock_select, (["--ns"], {"required": True}), (["--skip"], {"default": ""}))
+    add("vz-csv", cmd_vz_csv, (["--ns"], {"required": True}), (["--skip"], {"default": ""}), (["--out"], {"required": True}))
     add("verify-device", cmd_verify_device, N, (["--dir"], {"required": True}))
     add("enqueue", cmd_enqueue, N, (["--confirm"], {"default": None}), (["--local-ts"], {"default": ""}))
     add("requeue", cmd_requeue, N, (["--k"], {"type": int, "nargs": "+", "required": True}),

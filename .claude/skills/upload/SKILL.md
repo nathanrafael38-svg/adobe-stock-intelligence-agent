@@ -27,8 +27,8 @@ python -m msp dt-csv --n N --skip <dt_skip_k batch N>              # satu per ba
 1. Commit JPG final ke `_UPLOAD_QUEUE_VZ\` dan `_UPLOAD_QUEUE_DT\`; CSV Dreamstime ke `_UPLOAD_QUEUE_DT\csv\`.
 2. Verifikasi isi antrean (`device_list_dir`) = daftar `files`.
 3. Commit `READY.flag` ke masing-masing antrean **paling akhir**.
-4. Task PC "Microstock Upload Watch" (tiap 10 menit, `_tools\upload_watch.bat`) memanggil `vecteezy_upload.bat` / `dreamstime_upload.bat` dengan `NOPAUSE=1`. Adobe tetap lewat task "Adobe Stock SFTP Upload".
-5. Task belum ada → minta Nathan menjalankan `_tools\setup_tasks.bat` sekali (admin). Jangan jalankan WinSCP sendiri.
+4. Task PC "Microstock Upload Watch" (tiap 10 menit, `_tools\upload_watch.bat`) memanggil `vecteezy_upload.bat` / `dreamstime_upload.bat` dengan `NOPAUSE=1`. Task yang sama juga menjalankan `adobe_upload.bat` (Adobe), jadi tidak perlu mengubah task Adobe lama.
+5. Task belum ada → minta Nathan menjalankan `_tools\setup_tasks.bat` sekali (cukup klik dua kali, tanpa admin dan tanpa password; hasilnya di `_logs\setup_tasks.txt`). Jangan jalankan WinSCP sendiri.
 
 ## 3. Pantau dan rekam
 - Poll antrean (≤30 menit): VZ pindah ke `_UPLOAD_QUEUE_VZ\_sent`; DT kosong setelah JPG + CSV terkirim; flag terhapus = selesai.

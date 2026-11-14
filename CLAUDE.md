@@ -51,6 +51,8 @@ the first pending stage; nothing done is repeated. Short form:
    `msp weekly-stats` → **weekly report + evaluation + next-week actions** for Nathan
    (`dailyrun/reference/weekly.md`, section 5).
 
+**Uploads:** `/upload` (skill `upload`) covers Adobe, Vecteezy and Dreamstime: it stages queues + READY.flag, the PC task `Microstock Upload Watch` sends, you monitor logs and record results. Never run WinSCP yourself.
+
 There is no hourly run (it cost too many weekly tokens) and only one run a day. Nathan
 can start any stage by telling the orchestrator in chat (e.g. "sudah generate").
 

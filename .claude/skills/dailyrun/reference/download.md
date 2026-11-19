@@ -1,9 +1,11 @@
 # Stage 2/3 — find tile, download 2K, match
 
-Account: the microstock Google account (`…512@gmail.com`). Edge has several Google
-accounts; Flow opens with the default (`…38`). Check the avatar menu; if it is not the
-microstock account use *Switch account* and pick it (URL becomes `flow.google.com/u/1/`).
-Never pick another account and never sign in with a password → `blocked: wrong account`.
+Account: **`nathanrafael38@gmail.com`** (Edge's default account, `flow.google.com/u/0/`), standing
+instruction from Nathan on 2026-11-19, applies from C206 on. C205 and earlier were in the older
+`…512@gmail.com` account (`/u/1/`); use that only for batches C204 and older. Check the avatar menu
+for the email; never pick another account and never sign in with a password → `blocked: wrong account`.
+Project names vary (`C-Day N`, sometimes a date); if no project for the batch is found in
+`nathanrafael38`, report that to the orchestrator instead of concluding "not generated".
 Downloads land in `C:\Users\Nathan\Downloads\Buat Claude` (Edge setting, set by Nathan).
 
 ## Per batch

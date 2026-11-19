@@ -5,7 +5,7 @@
 |---|---|---|
 | PC on, logon | Claude desktop + Edge open by themselves (`autostart.bat` in Startup) | Windows |
 | 06:30 | "Microstock daily run" (once a day): `msp due` decides — weekly research and report (Mondays), process batches Nathan generated, reconcile uploads, prepare portal fields and tell Nathan the batch is ready (he submits manually), then prompts for the next C-Day. Silent when nothing to do. | Claude scheduled task |
-| any time after the run | generate x1 per prompt in the Flow project already open (microstock account; do not create a new project) | Nathan |
+| any time after the run | generate x1 per prompt in the Flow project already open (account nathanrafael38@gmail.com; do not create a new project) | Nathan |
 | every 15 min | `adobe_upload.bat` uploads the queue | Windows task (after `setup_tasks.bat`) |
 | every 15 min | `upscale_watch.bat` (only does work when files are queued) | Windows task "Microstock Upscale Watch" |
 | when convenient | submit the prepared batch in the Adobe portal yourself (Terms + CAPTCHA) | Nathan |
@@ -15,7 +15,7 @@ It resumes from state, so running it twice is safe.
 
 Requirements for unattended runs: PC on and awake (sleep is off on AC), Windows logged in,
 Claude desktop app open (file bridge), Edge open with the Claude extension connected and
-signed in to Flow (microstock account) and Adobe Stock contributor; Edge downloads go to
+signed in to Flow (nathanrafael38@gmail.com) and Adobe Stock contributor; Edge downloads go to
 `Downloads\Buat Claude`.
 
 ## Manual commands (in a Claude session with the repo)
